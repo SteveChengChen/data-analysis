@@ -1,0 +1,412 @@
+---
+title: "forkaia NLP"
+author: "Cheng Chen"
+date: "2024-09-26"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r}
+library(tidyverse)
+library(tm)
+library(tidytext)
+library(textclean)
+library(topicmodels)
+library(caret)
+library(cluster)
+library(ggplot2)
+library(spacyr)
+library(quanteda)
+library(readr)
+
+talent_data <- read_csv("/Users/chencheng/Desktop/求职/Forkaia实习/TASK 3 | NLP/Talent Snapshot - ___.csv")
+```
+
+```{r}
+column_names <- colnames(talent_data)
+
+print(column_names)
+```
+
+
+```{r}
+# Glimpse the data structure
+glimpse(talent_data)
+```
+
+```{r}
+# Initialize spaCy with the English language model
+spacy_initialize(model = "en_core_web_sm")
+```
+
+```{r}
+# Select the 'Education' column
+education_data <- talent_data %>%
+  select(Education)
+```
+
+```{r}
+education_data_clean <- education_data %>%
+  mutate(Education = replace_non_ascii(Education)) %>%
+  mutate(Education = replace_contraction(Education)) %>%
+  mutate(Education = replace_symbol(Education))
+```
+
+```{r}
+# Clean and preprocess the education data
+education_clean <- education_data_clean %>%
+  mutate(Education = tolower(Education)) %>%
+  mutate(Education = str_replace_all(Education, "[\\|;/]", ",")) %>%
+  mutate(Education = str_replace_all(Education, "[()]", "")) %>%
+  mutate(Education = str_squish(Education))
+```
+
+```{r}
+head(education_clean$Education, 10)
+```
+
+```{r}
+# Split the entries
+education_long <- education_clean %>%
+  separate_rows(Education, sep = ",") %>%
+  mutate(Education = str_trim(Education)) %>%
+  mutate(doc_id = row_number())
+```
+
+```{r}
+head(education_long$Education, 20)
+```
+
+```{r}
+# Define school and degree patterns
+school_keywords <- c("university", "college", "institute", "school", "academy", "polytechnic", "tech", "technology")
+degree_keywords <- c("phd", "ph.d", "doctorate", "master", "m.sc", "ms", "bachelor", "b.sc", "bs", "associate", "diploma", "certificate")
+```
+
+```{r}
+school_pattern <- paste0("\\b(?:[a-z]+\\s)?(", paste(school_keywords, collapse = "|"), ")(?:\\s[a-z]+)?\\b")
+degree_pattern <- paste0("\\b(", paste(degree_keywords, collapse = "|"), ")\\b")
+```
+
+```{r}
+# Extract school names
+education_schools <- education_long %>%
+  filter(str_detect(Education, school_pattern)) %>%
+  mutate(School = str_extract(Education, ".*")) %>%
+  select(doc_id, School)
+
+# Remove duplicates
+education_schools <- education_schools %>%
+  distinct()
+
+# View extracted schools
+head(education_schools)
+```
+
+```{r}
+# Extract degrees
+education_degrees <- education_long %>%
+  filter(str_detect(Education, degree_pattern)) %>%
+  mutate(Degree = str_extract(Education, degree_pattern)) %>%
+  select(doc_id, Degree)
+
+# Remove duplicates
+education_degrees <- education_degrees %>%
+  distinct()
+
+# View extracted degrees
+head(education_degrees)
+```
+
+```{r}
+# Identify schools and degrees
+education_grouped <- education_long %>%
+  group_by(doc_id) %>%
+  mutate(entry_order = row_number())
+
+schools_with_order <- education_grouped %>%
+  filter(str_detect(Education, school_pattern)) %>%
+  mutate(School = Education) %>%
+  select(doc_id, entry_order, School)
+
+degrees_with_order <- education_grouped %>%
+  filter(str_detect(Education, degree_pattern)) %>%
+  mutate(Degree = Education) %>%
+  select(doc_id, entry_order, Degree)
+```
+
+```{r}
+# Combine schools and degrees
+education_info <- schools_with_order %>%
+  left_join(degrees_with_order, by = c("doc_id", "entry_order")) %>%
+  select(doc_id, Degree, School)
+```
+
+```{r}
+# For each doc_id, fill missing degrees or schools
+education_info <- education_info %>%
+  group_by(doc_id) %>%
+  fill(Degree, .direction = "downup") %>%
+  fill(School, .direction = "downup") %>%
+  ungroup()
+
+# Remove duplicates
+education_info <- education_info %>%
+  distinct()
+```
+
+```{r}
+# Fill missing values and clean degrees
+education_info <- education_info %>%
+  group_by(doc_id) %>%
+  fill(Degree, .direction = "downup") %>%
+  fill(School, .direction = "downup") %>%
+  ungroup() %>%
+  mutate(Degree = case_when(
+    str_detect(Degree, "phd|ph.d|doctorate") ~ "PhD",
+    str_detect(Degree, "master|m.sc|ms") ~ "Master",
+    str_detect(Degree, "bachelor|b.sc|bs") ~ "Bachelor",
+    str_detect(Degree, "associate") ~ "Associate",
+    str_detect(Degree, "diploma") ~ "Diploma",
+    str_detect(Degree, "certificate") ~ "Certificate",
+    TRUE ~ Degree
+  )) %>%
+  distinct()
+```
+
+```{r}
+education_info
+```
+
+```{r}
+# Select the 'Achievements' column
+achievements_data <- talent_data %>%
+  mutate(doc_id = row_number()) %>%
+  select(doc_id, Achievements = `What do you consider your biggest achievements in your life up until now Anything of special recognition List any Awards honors or hackathons youve won`)
+
+```
+
+```{r}
+# Clean the achievements text
+achievements_clean <- achievements_data %>%
+  mutate(Achievements = tolower(Achievements)) %>%
+  mutate(Achievements = str_replace_all(Achievements, "[\\|;/]", ",")) %>%
+  mutate(Achievements = str_replace_all(Achievements, "[()]", "")) %>%
+  mutate(Achievements = str_squish(Achievements))  # Remove extra whitespace
+
+# View cleaned achievements
+head(achievements_clean$Achievements)
+```
+
+```{r}
+# Define achievement-related keywords
+achievement_keywords <- c("won", "award", "prize", "honor", "recognition", "hackathon", "competition", "contest", "scholarship", "fellowship", "leader", "captain", "best", "first place", "top", "achieved", "selected")
+
+# Create a regex pattern
+achievement_pattern <- paste(achievement_keywords, collapse = "|")
+
+```
+
+```{r}
+# Identify and extract significant accomplishments
+significant_achievements <- achievements_clean %>%
+  mutate(Contains_Keywords = str_detect(Achievements, achievement_pattern)) %>%
+  filter(Contains_Keywords == TRUE) %>%
+  mutate(Special_Accomplishment = str_extract(Achievements, paste0(".*?(?:", achievement_pattern, ").*?[.!?]"))) %>%
+  select(doc_id, Special_Accomplishment) %>%
+  filter(!is.na(Special_Accomplishment)) %>%
+  distinct()
+```
+
+```{r}
+# Ensure 'doc_id' is numeric in both data frames
+education_info <- education_info %>%
+  mutate(doc_id = as.numeric(doc_id))
+```
+
+```{r}
+significant_achievements <- significant_achievements %>%
+  mutate(doc_id = as.numeric(doc_id))
+```
+
+```{r}
+# Join the data frames
+talent_showcase <- education_info %>%
+  left_join(significant_achievements, by = "doc_id") %>%
+  select(Degree, School, Special_Accomplishment)
+```
+
+```{r}
+# Remove duplicates and NAs
+talent_showcase <- talent_showcase %>%
+  filter(!is.na(Degree) | !is.na(School) | !is.na(Special_Accomplishment)) %>%
+  distinct()
+```
+
+```{r}
+write.csv(talent_showcase, "/Users/chencheng/Desktop/求职/Forkaia实习/TASK 3 | NLP/talent_showcase.csv", row.names = FALSE)
+```
+
+
+```{r}
+#Part Two: Analyzing What the Data Means to Forkaia
+# Select columns relevant to members' motivations and contributions
+analysis_data <- talent_data %>%
+  select(
+    Why_Join = `Why did you want to join Forkaia`,
+    Main_Talents = `What are your main talents What skills are you better at than most people that you would define as your competitive advantage`,
+    Want_To_Work_On = `What do you want to work on`,
+    Want_To_Get = `What do you want to get out of Forkaia`,
+    How_Add_Value = `Please explain how you can add value to any of the Forkaia Platforms Startups or Creative Lab Projects Please be specific for example I can analyze spatial data for RUN IT BACK and determine if there is a relationship between app usage and population density or for the apps that might not have data sets I can set up algorithms and processes to ensure a clean and useful database`
+  )
+```
+
+```{r}
+# Combine all text columns into one for a comprehensive analysis
+combined_text <- analysis_data %>%
+  unite("Combined_Text", everything(), sep = " ", na.rm = TRUE)
+
+# Clean the text data
+combined_text_clean <- combined_text %>%
+  mutate(Combined_Text = tolower(Combined_Text)) %>%
+  mutate(Combined_Text = replace_non_ascii(Combined_Text)) %>%
+  mutate(Combined_Text = replace_contraction(Combined_Text)) %>%
+  mutate(Combined_Text = replace_symbol(Combined_Text))
+
+# Tokenize the text data
+tokens <- combined_text_clean %>%
+  unnest_tokens(word, Combined_Text)
+
+# Remove stop words
+data("stop_words")
+tokens <- tokens %>%
+  anti_join(stop_words)
+
+```
+
+```{r}
+# Calculate word frequencies
+word_counts <- tokens %>%
+  count(word, sort = TRUE)
+
+# View the most common words
+head(word_counts, 20)
+
+write_csv(word_counts,"/Users/chencheng/Desktop/求职/Forkaia实习/TASK 3 | NLP/word_counts.csv")
+```
+
+```{r}
+# Install and load the wordcloud package if not already installed
+# install.packages("wordcloud")
+library(wordcloud)
+
+# Generate the word cloud
+set.seed(123)
+wordcloud(words = word_counts$word, freq = word_counts$n, max.words = 100, colors = brewer.pal(8, "Dark2"))
+```
+
+```{r}
+# Get sentiment lexicon
+bing <- get_sentiments("bing")
+
+# Perform sentiment analysis
+sentiment_analysis <- tokens %>%
+  inner_join(bing, by = "word") %>%
+  count(sentiment)
+
+# Visualize sentiment counts
+library(ggplot2)
+ggplot(sentiment_analysis, aes(x = sentiment, y = n, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  labs(title = "Sentiment Analysis of Member Responses", x = "Sentiment", y = "Frequency")
+
+```
+
+```{r}
+# Create a Document-Term Matrix
+dtm <- tokens %>%
+  count(document = row_number(), word) %>%
+  cast_dtm(document, word, n)
+
+# Install and load the topicmodels package if not already installed
+# install.packages("topicmodels")
+library(topicmodels)
+
+# Set the number of topics
+num_topics <- 5
+
+# Fit the LDA model
+lda_model <- LDA(dtm, k = num_topics, control = list(seed = 1234))
+
+# Extract the top terms for each topic
+library(tidytext)
+topics <- tidy(lda_model, matrix = "beta")
+
+top_terms <- topics %>%
+  group_by(topic) %>%
+  top_n(10, beta) %>%
+  arrange(topic, -beta)
+
+# View the top terms per topic
+write.csv(top_terms, "/Users/chencheng/Desktop/求职/Forkaia实习/TASK 3 | NLP/top_terms.csv", row.names = FALSE)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
