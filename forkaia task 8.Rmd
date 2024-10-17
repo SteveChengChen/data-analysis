@@ -1,0 +1,485 @@
+---
+title: "forkaia task 8"
+author: "Cheng Chen"
+date: "2024-10-15"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+library(dplyr)
+library(readr)
+library(ggplot2)
+library(tidyr)
+library(stringr)
+```
+
+```{r}
+stealth_applicants <- read_csv("/Users/chencheng/Desktop/求职/Forkaia实习/TASK 8/STEALTH APPLICANTS - ___.csv")
+#View(stealth_applicants)
+```
+
+```{r}
+# number of total applicants 
+total_applicants <- nrow(stealth_applicants)
+
+total_applicants
+```
+
+```{r}
+# number of distinct schools
+
+total_distinct_schools <- n_distinct(stealth_applicants$SCHOOL)
+
+print(total_distinct_schools)
+```
+
+```{r}
+# Create a data frame for plotting
+data <- data.frame(
+  Category = c("Total Applicants", "Total Schools"),
+  Count = c(total_applicants, total_distinct_schools)
+)
+
+# Create the bar plot with numbers displayed
+ggplot(data, aes(x = Category, y = Count, fill = Category)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = Count), vjust = -0.5, size = 5) +  # Add numbers above bars
+  labs(title = "Total Applicants and Total Schools", x = "Category", y = "Count") +
+  theme_minimal() +
+  scale_fill_manual(values = c("#0073C2FF", "#EFC000FF"))
+```
+
+```{r}
+# school year count
+school_year_counts <- table(stealth_applicants$`SCHOOL YEAR`)
+```
+
+```{r}
+# school year count
+
+school_year_counts_df <- as.data.frame(school_year_counts)
+
+ordered_school_year_counts <- school_year_counts_df[order(-school_year_counts_df$Freq), ]
+
+print(ordered_school_year_counts)
+```
+
+```{r}
+# school year count with percentage
+
+school_year_counts_df$Percentage <- (school_year_counts_df$Freq / sum(school_year_counts_df$Freq)) * 100
+
+ordered_school_year_counts <- school_year_counts_df[order(-school_year_counts_df$Percentage), ]
+
+print(ordered_school_year_counts)
+```
+
+```{r}
+# Combine specified categories into "Others"
+stealth_applicants$`SCHOOL YEAR` <- stealth_applicants$`SCHOOL YEAR` %>%
+  recode(`Second Year Community / Technical College` = "Others",
+         `First Year Community / Technical College` = "Others",
+         `Certificate Program` = "Others",
+         `Accelerated Masters` = "Others",
+         `Postdoctoral Studies` = "Others")
+
+# Count the number of occurrences for each distinct value in the 'SCHOOL YEAR' column
+school_year_counts <- table(stealth_applicants$`SCHOOL YEAR`)
+
+# Convert to a data frame
+school_year_counts_df <- as.data.frame(school_year_counts)
+
+# Calculate the percentage for each school year
+school_year_counts_df$Percentage <- (school_year_counts_df$Freq / sum(school_year_counts_df$Freq)) * 100
+
+# Order by percentage
+ordered_school_year_counts <- school_year_counts_df[order(-school_year_counts_df$Percentage), ]
+
+# Create the column chart with counts displayed using a dynamic palette
+ggplot(ordered_school_year_counts, aes(x = Var1, y = Freq, fill = Var1)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = Freq), vjust = -0.5, size = 4) +  # Add numbers above bars
+  labs(title = "Count of Applicants by School Year", x = "School Year", y = "Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  # Rotate x-axis labels for readability
+  scale_fill_brewer(palette = "Set3")  # Use a dynamic color palette
+
+# Create the pie chart with percentages using a dynamic palette
+ggplot(ordered_school_year_counts, aes(x = "", y = Percentage, fill = Var1)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y", start = 0) +
+  geom_text(aes(label = paste0(round(Percentage, 1), "%")), 
+            position = position_stack(vjust = 0.5), size = 4) +  # Add percentages
+  labs(title = "Percentage of Applicants by School Year") +
+  theme_void() +
+  scale_fill_brewer(palette = "Set3")  # Use a dynamic color palette
+
+# Create the column chart with counts displayed using more manual colors
+ggplot(ordered_school_year_counts, aes(x = Var1, y = Freq, fill = Var1)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = Freq), vjust = -0.5, size = 4) +  # Add numbers above bars
+  labs(title = "Count of Applicants by School Year", x = "School Year", y = "Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  # Rotate x-axis labels for readability
+  scale_fill_manual(values = c("#0073C2FF", "#EFC000FF", "#868686FF", "#CD534CFF", "#FFDB6D", 
+                               "#1F78B4", "#33A02C", "#FB9A99", "#E31A1C", "#FDBF6F"))
+
+
+```
+
+```{r}
+# school name count
+
+school_counts <- table(stealth_applicants$SCHOOL)
+
+school_counts_df <- as.data.frame(school_counts)
+ordered_school_counts <- school_counts_df[order(-school_counts_df$Freq), ]
+
+print(ordered_school_counts)
+```
+
+```{r}
+# Select the top 10 schools
+top_10_schools <- head(ordered_school_counts, 10)
+
+# Create the column chart with counts displayed
+ggplot(top_10_schools, aes(x = reorder(Var1, -Freq), y = Freq, fill = Var1)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = Freq), vjust = -0.5, size = 4) +  # Add numbers above bars
+  labs(title = "Top 10 Schools by Number of Applicants", x = "School", y = "Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  # Rotate x-axis labels for readability
+  scale_fill_brewer(palette = "Set3")  # Use a dynamic color palette
+```
+
+```{r}
+# top 10 school count with percentage
+
+school_counts_df$Percentage <- (school_counts_df$Freq / sum(school_counts_df$Freq)) * 100
+
+ordered_school_counts <- school_counts_df[order(-school_counts_df$Percentage), ]
+
+print(ordered_school_counts)
+```
+
+```{r}
+# top 10 schools count
+
+top_10_schools <- head(ordered_school_counts, 10)
+
+print(top_10_schools)
+```
+
+```{r}
+# table of top 10 schools with school year count and percentage
+
+top_10_data <- stealth_applicants %>%
+  filter(SCHOOL %in% top_10_schools$Var1)
+
+summary_table <- top_10_data %>%
+  group_by(SCHOOL, `SCHOOL YEAR`) %>%
+  summarise(Count = n()) %>%
+  mutate(Percentage = (Count / sum(Count)) * 100) %>%
+  pivot_wider(names_from = `SCHOOL YEAR`, values_from = c(Count, Percentage), values_fill = list(Count = 0, Percentage = 0))
+
+summary_table <- summary_table %>%
+  arrange(match(SCHOOL, top_10_schools$Var1))
+
+print(summary_table)
+```
+
+```{r}
+# top 5 for each school year in one table
+
+get_top_5_schools <- function(data) {
+  data %>%
+    group_by(SCHOOL) %>%
+    summarise(Count = n()) %>%
+    arrange(desc(Count)) %>%
+    slice(1:5) %>%
+    ungroup()
+}
+
+top_5_schools_per_year <- stealth_applicants %>%
+  group_by(`SCHOOL YEAR`) %>%
+  do(get_top_5_schools(.)) %>%
+  group_by(`SCHOOL YEAR`) %>%
+  mutate(Rank = row_number())
+
+top_5_schools_wide <- top_5_schools_per_year %>%
+  pivot_wider(names_from = Rank, values_from = c(SCHOOL, Count), names_sep = "_") %>%
+  select(`SCHOOL YEAR`, SCHOOL_1, Count_1, SCHOOL_2, Count_2, SCHOOL_3, Count_3, SCHOOL_4, Count_4, SCHOOL_5, Count_5)
+
+print(top_5_schools_wide)
+```
+
+```{r}
+# top 5 for each school year in separate table
+
+get_top_5_schools <- function(data) {
+  data %>%
+    group_by(SCHOOL) %>%
+    summarise(Count = n()) %>%
+    arrange(desc(Count)) %>%
+    slice(1:5) %>%
+    ungroup()
+}
+
+top_5_schools_by_year <- stealth_applicants %>%
+  group_by(`SCHOOL YEAR`) %>%
+  do(get_top_5_schools(.)) %>%
+  arrange(`SCHOOL YEAR`, desc(Count))
+
+top_5_schools_tables <- split(top_5_schools_by_year, top_5_schools_by_year$`SCHOOL YEAR`)
+
+for (year in names(top_5_schools_tables)) {
+  cat("\nSchool Year:", year, "\n")
+  print(top_5_schools_tables[[year]])
+}
+```
+
+```{r}
+# Function to get top 5 schools for each school year
+get_top_5_schools <- function(data) {
+  data %>%
+    group_by(SCHOOL) %>%
+    summarise(Count = n()) %>%
+    arrange(desc(Count)) %>%
+    slice(1:5) %>%
+    ungroup()
+}
+
+# Get the top 5 schools per school year
+top_5_schools_per_year <- stealth_applicants %>%
+  group_by(`SCHOOL YEAR`) %>%
+  do(get_top_5_schools(.)) %>%
+  group_by(`SCHOOL YEAR`) %>%
+  mutate(Rank = row_number())
+
+# Define the list of specific school years to create individual charts for
+school_years_to_plot <- c("Freshman", "Sophomore", "Junior", "Senior", 
+                          "Masters", "Doctorate", "Masters of Business Administration")
+
+# Loop through each school year and plot the top 5 schools
+for (year in school_years_to_plot) {
+  # Filter the top 5 schools for the specific school year
+  top_5_for_year <- top_5_schools_per_year %>%
+    filter(`SCHOOL YEAR` == year)
+  
+  # Create a column chart for the top 5 schools in the selected year
+  p <- ggplot(top_5_for_year, aes(x = reorder(SCHOOL, -Count), y = Count, fill = SCHOOL)) +
+    geom_bar(stat = "identity") +
+    geom_text(aes(label = Count), vjust = -0.5, size = 4) +  # Add counts on the bars
+    labs(title = paste("Top 5 Schools for", year), x = "School", y = "Count") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  # Rotate x-axis labels for readability
+    scale_fill_brewer(palette = "Set3")  # Use a dynamic color palette
+  
+  # Print the plot
+  print(p)
+}
+```
+
+```{r}
+# Define the categories and keywords (including the new "Undeclared" category)
+categories <- list(
+  "Arts & Humanities" = c("Literature", "English", "Comparative Literature", "Creative Writing", "Languages", "Spanish", 
+                          "French", "Chinese", "Linguistics", "Philosophy", "History", "Religious Studies", "Art History", 
+                          "Performing Arts", "Theater", "Dance", "Music", "Visual Arts", "Painting", "Sculpture", "Photography", 
+                          "Classical Studies", "Greek", "Roman", "Culture", "Art"),
+  "Social Sciences" = c("Psychology", "Sociology", "Anthropology", "Political Science", "Economics", "Geography", 
+                        "International Relations", "Social Work", "Criminology", "Cultural Studies", "Gender Studies", "International", "international", "Relations", "Policy", "Policies", "Political", "Econ", "econ", "Social"),
+  "Natural Sciences" = c("Biology", "Chemistry", "Physics", "Earth Science", "Geology", "Meteorology", 
+                         "Environmental Science", "Astronomy", "Ecology", "Marine Biology", "Neuroscience", "Biological"),
+  "Mathematics & Statistics" = c("Mathematics", "Statistics", "Applied Mathematics", "Actuarial Science", "Data", 
+                                  "Data Science", "Analytic", "Mathematical", "Statistical", "Analytical", "Analysis", "MATM", "MAT", "STAT"),
+  "Engineering & Technology" = c("Civil Engineering", "Mechanical Engineering", "Electrical Engineering", "Computer Engineering", 
+                                  "Chemical Engineering", "Aerospace Engineering", "Biomedical Engineering", "Environmental Engineering", 
+                                  "Computer Science", "Information Technology", "Information", "Computer", "Engineering", "Eng", "Software", "Tech", "Technology", "Technological", "Compt", "Informatics"),
+  "Business" = c("Business Administration", "Marketing", "Finance", "Accounting", "Management Information Systems", 
+                 "Supply Chain Management", "Human Resources", "International Business", "Real Estate", "Entrepreneurship", "Business", "Financial", "Entrepreneur", "Management", "BUS", "Bus", "Mgt", "Accountancy", "Mngt"),
+  "Health & Medicine" = c("Nursing", "Pre-Med", "Public Health", "Pharmacy", "Physical Therapy", "Occupational Therapy", 
+                          "Dietetics/Nutrition", "Speech-Language Pathology", "Kinesiology", "Health Administration"),
+  "Education" = c("Early Childhood Education", "Elementary Education", "Education", "Special Education", "Educational Leadership", 
+                  "Counseling", "Curriculum Development"),
+  "Law & Public Policy" = c("Pre-Law", "Legal Studies", "Public Policy", "Public Administration", "Criminal Justice", "Law"),
+  "Environmental Studies & Sustainability" = c("Environmental Science", "Sustainability Studies", "Conservation Biology", 
+                                               "Environmental Policy", "Forestry", "Forensics"),
+  "Communications & Media" = c("Journalism", "Public Relations", "Communication Studies", "Media Studies", "Film Studies", 
+                                "Broadcasting", "Digital Media", "Graphic Design", "Communication", "Media", "Advising", "Advertising", "Design"),
+  "Architecture & Design" = c("Architecture", "Interior Design", "Industrial Design", "Graphic Design", "Fashion Design", "Urban Planning"),
+  "Agriculture & Life Sciences" = c("Agriculture", "Animal Science", "Horticulture", "Food Science", "Agricultural Economics"),
+  "Hospitality & Tourism" = c("Hospitality Management", "Tourism Management", "Culinary Arts", "Event Planning"),
+  "Interdisciplinary Studies" = c("Global Studies", "Environmental Science and Policy", "Ethnic Studies", "Women’s and Gender Studies", 
+                                  "Peace and Conflict Studies", "Global"),
+  "Undeclared" = c("undelcare", "Undeclare", "NA") # Adding "Undeclared" category
+)
+
+# Function to categorize majors based on keywords
+categorize_major <- function(major) {
+  # Split the values by commas
+  major_split <- unlist(str_split(major, ","))
+  
+  # Initialize an empty list to store categorized values
+  categorized <- list()
+  
+  # Loop through each part of the major and categorize it
+  for (m in major_split) {
+    m_trimmed <- str_trim(m) # Remove leading/trailing whitespace
+    
+    # Check if it's undeclared first
+    if (is.na(m_trimmed) || any(str_detect(m_trimmed, categories$Undeclared))) {
+      categorized <- append(categorized, "Undeclared")
+    } else {
+      matched <- FALSE
+      # Check which category it belongs to
+      for (category in names(categories)) {
+        if (any(str_detect(m_trimmed, categories[[category]]))) {
+          categorized <- append(categorized, category)
+          matched <- TRUE
+          break # Stop after the first category match
+        }
+      }
+      # If no match, append "Other"
+      if (!matched) {
+        categorized <- append(categorized, "Other")
+      }
+    }
+  }
+  
+  # If all categorized majors are the same, combine them into one
+  if (length(unique(categorized)) == 1) {
+    return(unique(categorized))
+  } else {
+    return(paste(categorized, collapse = ", "))
+  }
+}
+
+# Apply the categorization function to the "MAJOR" column
+stealth_applicants <- stealth_applicants %>%
+  mutate(MAJOR_CATEGORY = sapply(MAJOR, categorize_major))
+
+# Print the first few rows of the updated dataset to verify
+#View(stealth_applicants)
+```
+
+```{r}
+# Split the MAJOR_CATEGORY values by commas and unnest them into individual rows
+major_category_split <- stealth_applicants %>%
+  # Split the values in the MAJOR_CATEGORY column by comma
+  mutate(MAJOR_CATEGORY_SPLIT = str_split(MAJOR_CATEGORY, ", ")) %>%
+  # Unnest the split values into separate rows
+  unnest(MAJOR_CATEGORY_SPLIT)
+
+# Count the occurrences of each distinct value in MAJOR_CATEGORY_SPLIT
+category_counts <- major_category_split %>%
+  group_by(MAJOR_CATEGORY_SPLIT) %>%
+  summarise(Count = n()) %>%
+  ungroup() %>%
+  # Calculate the percentage based on the total number of rows in the original dataset
+  mutate(Percentage = (Count / nrow(stealth_applicants)) * 100) %>%
+  # Order by count in descending order
+  arrange(desc(Count))
+
+# Print the result
+print(category_counts)
+```
+
+```{r}
+# Filter the top 10 majors
+top_10_category_counts <- category_counts %>%
+  top_n(10, Count) %>%
+  arrange(desc(Count))
+
+# Create a column chart with counts displayed for the top 10 majors
+ggplot(top_10_category_counts, aes(x = reorder(MAJOR_CATEGORY_SPLIT, -Count), y = Count, fill = MAJOR_CATEGORY_SPLIT)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = Count), vjust = -0.5, size = 4) +  # Add counts above bars
+  labs(title = "Top 10 Major Categories by Count", x = "Major Category", y = "Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  # Rotate x-axis labels for readability
+  scale_fill_brewer(palette = "Set3")  # Use a dynamic color palette
+
+# Create a pie chart with percentages displayed for the top 10 majors
+ggplot(top_10_category_counts, aes(x = "", y = Percentage, fill = MAJOR_CATEGORY_SPLIT)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y", start = 0) +
+  geom_text(aes(label = paste0(round(Percentage, 1), "%")), 
+            position = position_stack(vjust = 0.5), size = 4) +  # Add percentages on the pie slices
+  labs(title = "Top 10 Major Categories by Percentage") +
+  theme_void() +
+  scale_fill_brewer(palette = "Set3")  # Use a dynamic color palette
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
