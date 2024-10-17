@@ -1,0 +1,298 @@
+---
+title: "forkaia task 5"
+author: "Cheng Chen"
+date: "2024-10-15"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+library(readr)
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+library(stringr)
+library(purrr)
+```
+
+```{r}
+data_dictionary <- read_csv("/Users/chencheng/Desktop/求职/Forkaia实习/TASK 5/DATA DICTIONARY.csv")
+#View(data_dictionary)
+idea_data_lab <- read_csv("/Users/chencheng/Desktop/求职/Forkaia实习/TASK 5/IDEA LAB DATA.csv")
+#View(idea_data_lab)
+```
+
+```{r}
+data_dictionary_cleaned <- data_dictionary %>% select_if(~ !all(is.na(.)))
+idea_data_lab_cleaned <- idea_data_lab %>% drop_na()
+
+data_dictionary_cleaned <- data_dictionary_cleaned %>% filter_all(any_vars(!is.na(.)))
+
+#View(data_dictionary_cleaned)
+#View(idea_data_lab_cleaned)
+```
+
+```{r}
+write_csv(data_dictionary_cleaned, "/Users/chencheng/Desktop/求职/Forkaia实习/TASK 5/DATA_DICTIONARY_CLEANED.csv")
+write_csv(idea_data_lab_cleaned, "/Users/chencheng/Desktop/求职/Forkaia实习/TASK 5/IDEA_LAB_DATA_CLEANED.csv")
+```
+
+```{r}
+data_dictionary_cleaned <- read_csv("/Users/chencheng/Desktop/求职/Forkaia实习/TASK 5/DATA_DICTIONARY_CLEANED.csv")
+idea_lab_data_cleaned <- read_csv("/Users/chencheng/Desktop/求职/Forkaia实习/TASK 5/IDEA_LAB_DATA_CLEANED.csv")
+#View(data_dictionary_cleaned)
+#View(idea_lab_data_cleaned)
+```
+
+```{r}
+idea_data_lab_cleaned <- idea_data_lab_cleaned %>%
+  mutate(TEAMS = str_replace_all(TEAMS, "\\.", ""))
+
+data_dictionary_cleaned <- data_dictionary_cleaned %>%
+  mutate(Name = str_replace_all(Name, "\\.", ""))
+
+# View the cleaned data
+#View(data_dictionary_cleaned)
+# View the cleaned data
+#View(idea_data_lab_cleaned)
+```
+
+```{r}
+#write_csv(idea_data_lab_cleaned, "/Users/chencheng/Desktop/求职/Forkaia实习/TASK 5/IDEA_LAB_DATA_CLEANED_NO_DOTS.csv")
+#write_csv(data_dictionary_cleaned, "/Users/chencheng/Desktop/求职/Forkaia实习/TASK 5/DATA_DICTIONARY_CLEANED_NO_DOTS.csv")
+```
+
+
+```{r}
+# Step 1: Create a function to extract and split the values after the first dash
+extract_and_split_names <- function(name) {
+  # Extract everything after the first dash
+  name_after_dash <- str_extract(name, "(?<=-).+")
+  
+  # If there is something after the dash, split by "-" or "|"
+  if (!is.na(name_after_dash)) {
+    split_names <- str_split(name_after_dash, "\\s*[-|]\\s*")[[1]]  # Split by "-" or "|"
+    return(split_names)
+  }
+  return(NA)  # Return NA if no dash found
+}
+
+# Step 2: Apply the function to the "Name" column and expand into multiple rows for each split value
+new_data_dictionary <- data_dictionary_cleaned %>%
+  mutate(Name_Split = lapply(Name, extract_and_split_names)) %>%
+  unnest(Name_Split) %>%  # Unnest the list of names into rows
+  select(Name = Name_Split, Team) %>%  # Keep the split names and corresponding Team
+  distinct()  # Remove duplicates
+
+new_data_dictionary <- new_data_dictionary %>%
+  mutate(Name = str_trim(Name))  # Remove leading and trailing spaces
+
+# Step 2: Remove rows with NA values in the Name or Team columns
+new_data_dictionary <- new_data_dictionary %>%
+  drop_na(Name, Team)
+
+# View the new data dictionary
+#View(new_data_dictionary)
+
+#write_csv(new_data_dictionary, "/Users/chencheng/Desktop/求职/Forkaia实习/TASK 5/new_data_dictionary_cleaned.csv")
+```
+
+
+```{r}
+# Step 1: Create named vectors that map Names to Teams from both the original and new cleaned data dictionaries
+name_to_team <- setNames(data_dictionary_cleaned$Team, data_dictionary_cleaned$Name)
+name_to_team_new <- setNames(new_data_dictionary$Team, new_data_dictionary$Name)
+
+# Step 2: Update the function to replace names with teams, return NA if no match is found, and keep only distinct values
+replace_names_with_teams_updated <- function(teams_string) {
+  # Split the TEAMS string into individual names based on the comma
+  names_list <- unlist(str_split(teams_string, ",\\s*"))
+  
+  # Replace each name with the corresponding team from either dictionary
+  replaced_teams <- sapply(names_list, function(name) {
+    name <- str_trim(name)  # Trim any extra spaces
+    
+    # Check for project management-related roles and replace them with "PM"
+    if (str_detect(name, "PM - Project Management|PM - Project Manager|Project Manager|Project Management|PM")) {
+      return("PM")
+    }
+    
+    # Check if the name matches any entry in the original data dictionary
+    matched_name <- data_dictionary_cleaned$Name[which(str_detect(name, fixed(data_dictionary_cleaned$Name)))]
+    
+    # If a match is found in the original data dictionary, return the corresponding team
+    if (length(matched_name) > 0) {
+      return(name_to_team[[matched_name[1]]])  # Use the first match if there are multiple
+    }
+    
+    # If no match is found, check the new data dictionary
+    matched_name_new <- new_data_dictionary$Name[which(str_detect(name, fixed(new_data_dictionary$Name)))]
+    
+    # If a match is found in the new data dictionary, return the corresponding team
+    if (length(matched_name_new) > 0) {
+      return(name_to_team_new[[matched_name_new[1]]])  # Use the first match if there are multiple
+    }
+    
+    # If no match is found, return NA
+    return(NA)
+  })
+  
+  # Remove duplicates by keeping only distinct values and removing NA
+  distinct_teams <- unique(na.omit(replaced_teams))
+  
+  # If all names in the list return NA, the result should be NA
+  if (length(distinct_teams) == 0) {
+    return(NA)
+  }
+  
+  # Collapse the distinct team names back into a string, separated by commas
+  return(paste(distinct_teams, collapse = ", "))
+}
+
+# Step 3: Apply the updated function to the TEAMS column in idea_data_lab_cleaned
+idea_data_lab_cleaned <- idea_data_lab_cleaned %>%
+  mutate(TEAMS = sapply(TEAMS, replace_names_with_teams_updated))
+
+# Step 4: Remove rows where the TEAMS column contains only NA
+idea_data_lab_cleaned <- idea_data_lab_cleaned %>%
+  filter(!is.na(TEAMS))
+
+# View the cleaned and updated idea_data_lab_cleaned
+#View(idea_data_lab_cleaned)
+```
+
+```{r}
+# write_csv(idea_data_lab_cleaned, "/Users/chencheng/Desktop/求职/Forkaia实习/TASK 5/updated_idea_data_lab.csv")
+```
+
+```{r}
+updated_idea_data_lab <- read_csv("/Users/chencheng/Desktop/求职/Forkaia实习/TASK 5/updated_idea_data_lab.csv")
+#View(updated_idea_data_lab)
+```
+
+```{r}
+# Step 1: Separate the comma-separated values into individual rows
+idea_data_long <- idea_data_lab_cleaned %>%
+  separate_longer_delim(STARTUPS, delim = ",") %>%
+  separate_longer_delim(TEAMS, delim = ",")
+
+# Step 2: Clean the STARTUPS column by:
+# - Trimming any extra spaces
+# - Removing the "Pick Your Startups: " prefix
+idea_data_long <- idea_data_long %>%
+  mutate(
+    STARTUPS = str_trim(STARTUPS),  # Trim spaces from startup names
+    STARTUPS = str_replace(STARTUPS, "Pick Your Startups: ", "")  # Remove "Pick Your Startups: " prefix
+  )
+
+# Step 3: Convert startup names to lowercase for grouping, then combine under first name shown
+idea_data_long <- idea_data_long %>%
+  group_by(lowercase_startup = tolower(STARTUPS)) %>%  # Group by lowercase startup names
+  mutate(STARTUPS = first(STARTUPS)) %>%  # Use the first name encountered in the original case
+  ungroup() %>% 
+  select(-lowercase_startup)  # Remove the temporary lowercase column
+
+# Step 4: Remove startups that match any Name in the data dictionary cleaned
+idea_data_long <- idea_data_long %>%
+  filter(!STARTUPS %in% data_dictionary_cleaned$Name)  # Filter out startups that match any Name in the data dictionary
+
+# Step 5: Create a word count column and discard startups with more than 7 words
+idea_data_long <- idea_data_long %>%
+  mutate(word_count = str_count(STARTUPS, "\\S+")) %>%  # Count the number of words in each startup name
+  filter(word_count < 7) %>%  # Keep only startups with 7 or fewer words
+  select(-word_count)  # Remove the temporary word_count column
+
+# Step 6: Trim spaces from TEAMS column
+idea_data_long <- idea_data_long %>%
+  mutate(TEAMS = str_trim(TEAMS))
+
+# Step 7: Count the occurrences of each distinct team for each startup
+team_counts <- idea_data_long %>%
+  group_by(STARTUPS, TEAMS) %>%
+  summarise(count = n(), .groups = 'drop')
+
+# Step 8: Reshape the data to have startups as rows and distinct teams as columns
+final_table <- team_counts %>%
+  pivot_wider(names_from = TEAMS, values_from = count, values_fill = 0)
+
+# View the final table
+#View(final_table)
+head(final_table)
+```
+
+```{r}
+# write_csv(final_table, "/Users/chencheng/Desktop/求职/Forkaia实习/TASK 5/startup_team_counts.csv")
+```
+
+```{r}
+library(ggplot2)
+
+# Melt the final table into long format for plotting
+final_table_long <- final_table %>%
+  pivot_longer(cols = -STARTUPS, names_to = "Teams", values_to = "Count") %>%
+  filter(Count > 0)  # Filter out zeros
+
+# Plot a stacked bar chart
+ggplot(final_table_long, aes(x = STARTUPS, y = Count, fill = Teams)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Team Distribution Across Startups", x = "Startups", y = "Count of Teams", fill = "Teams")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
