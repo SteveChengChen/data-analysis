@@ -1,0 +1,174 @@
+---
+title: "Forkaia Task 9"
+author: "Cheng Chen"
+date: "2024-10-17"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r}
+library(readr)
+library(ggplot2)
+library(reshape2)
+library(fmsb)
+```
+
+```{r}
+explanation_sheet <- read_csv("/Users/chencheng/Desktop/求职/Forkaia实习/TASK 9/ROUND Z SCORECARD - Explanation sheet.csv")
+score_card <- read_csv("/Users/chencheng/Desktop/求职/Forkaia实习/TASK 9/ROUND Z SCORECARD - Score Card.csv")
+
+score_card_melted <- melt(score_card, id.vars = "Name", measure.vars = c("Innovation", "Relevance to Need of customer", "Scope of Investment", "Profitability", "Conversion possibility", "User Stickiness"))
+
+# Calculate average scores
+avg_scores <- colMeans(score_card[, c("Innovation", "Relevance to Need of customer", "Scope of Investment", "Profitability", "Conversion possibility", "User Stickiness")])
+
+# Convert to data frame for plotting
+avg_scores_df <- data.frame(Category = names(avg_scores), Average_Score = avg_scores)
+
+# Select the relevant columns for the radar chart
+categories <- c("Innovation", "Relevance to Need of customer", "Scope of Investment", 
+                "Profitability", "Conversion possibility", "User Stickiness")
+
+# Prepare the data
+max_values <- rep(10, length(categories))  # Assume the max score is 10 for all categories
+min_values <- rep(1, length(categories))   # Assume the min score is 1 for all categories
+
+# Add the max and min values to the data
+score_card_for_radar <- rbind(max_values, min_values, score_card[, categories])
+
+
+
+# View(explanation_sheet)
+# View(score_card)
+```
+
+```{r}
+# Open the PDF file
+pdf("Task 9 Complete_Visualization.pdf", width = 7, height = 7)
+
+# Box plot
+ggplot(score_card_melted, aes(x = variable, y = value)) +
+  geom_boxplot(fill = "skyblue", color = "black") +
+  labs(title = "Distribution of Scores Across Evaluation Categories (Box Plot)", x = "Evaluation Category", y = "Score") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Bar chart
+ggplot(avg_scores_df, aes(x = Category, y = Average_Score)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(title = "Average Scores Across Evaluation Categories (Bar Chart)", x = "Evaluation Category", y = "Average Score") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Loop through each startup and create a radar chart
+for (i in 1:nrow(score_card)) {
+  
+  # Prepare the data for the radar chart for the ith startup
+  startup_data <- score_card_for_radar[c(1, 2, i + 2), ]  # Adding 2 to account for max and min values
+  
+  # Create radar chart
+  radarchart(
+    startup_data,
+    axistype = 1,  # Use standard axis
+    pcol = "blue", # Line color
+    pfcol = rgb(0.2, 0.5, 0.5, 0.5),  # Fill color
+    plwd = 2,  # Line width
+    cglcol = "grey",  # Grid line color
+    cglty = 1,  # Grid line type
+    axislabcol = "black",  # Axis label color
+    caxislabels = seq(0, 10, 2),  # Axis labels
+    vlcex = 0.8,  # Font size for labels
+    title = paste("Radar Chart for", score_card$Name[i])  # Title of the chart
+  )
+}
+
+dev.off()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
