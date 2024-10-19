@@ -1,0 +1,246 @@
+---
+title: "forkaia task 10"
+author: "Cheng Chen"
+date: "2024-10-18"
+output: html_document
+---
+
+```{r}
+library(readr)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(treemapify)
+library(stringdist)
+```
+
+```{r}
+# Create the data frame with the provided data
+startups_data <- data.frame(
+  Startups = c(
+    "#67", "46andMix", "A_Connect", "AA", "Abstract", "Adonis", "Ahonetwo", "AI HR APP", "AIID", "ANAKIN", 
+    "app’arell", "Appbooks", "Augmented", "Aura", "B4Usend", "BACHICAS", "BANDAI", "beep beep", "BKFK", 
+    "BODUIT", "BOTDOJO", "Botligion", "Budpay", "Carousel", "Centimint", "ChickStarter", "CIRCUMPASS", 
+    "Confessional", "COPYCATZ", "Covtrace", "Critic Acid", "DB9", "Disruptive Labs", "Docs", "DR.INTERNET", 
+    "Droney", "EasyLazy", "ecamino", "Edgeucation", "egoIDPsyche", "ELEVATE", "Emojee", "ENERGY CANDY", 
+    "Escargot", "ESCAVE", "ETM", "FAM-ESS", "FASCIA", "FEEED", "FIRESTARTER", "FORWARD", "FOVIES", "funfunfood", 
+    "Game Chip", "GERMANA", "GoGoGo", "GPS PERSONAS", "Gpstickys", "Greenlit", "Haba Haba", "HaiR", "HEAD GURU", 
+    "Hiegraphics", "HORREAL", "HOWL", "HYPE.YOU.UP", "INAFLASH", "INSOLAR", "IQ BlindSpot", "Jellyfish Antfarm", 
+    "Karma Fund", "Keanu Capital", "KHOOBASH", "LANKING", "LEFTY", "Let's Play", "LIFESHOP", "LIGHT", 
+    "LIVE MEDITATION", "LivWin", "LOOP", "M.O.M", "Membrain", "MICRO", "MMMWC", "Mochi Tochi", "Mochips", 
+    "MOGULY", "momandpop", "MONET VENTURES", "MONKISH", "Monmentum", "Moonshadows", "mooVRoom", "moredata", 
+    "MOVIE ROOM", "MUSICGRAPH", "NAIM", "Nemebeat", "nextsport", "Now Equity", "OFFDIAL", "ONE SPOT", "OnSupply", 
+    "Open Closet", "ORIGAMI", "OTHERSIDE", "Paper to Database", "PARADISIO", "PEACH", "Pegasus", "Pendulum", 
+    "PIMPMYPIC", "Pink Algae", "PLAID", "Playbuk", "PockeTeach", "POMPOM", "POV", "POWERCUBE", "PREVIEW", "ProCO2", 
+    "ProFashion", "PRONTO", "Propaganda", "Protein", "PSYCARE", "Raconteur", "RAVERSE", "REP REP", "result", 
+    "Resume Survivor", "RETURNZ", "Ricochet", "Rise Capital", "RISE HOLDINGS", "Rockstar Entrpreneur", "Round Z", 
+    "RUN IT BACK", "Sandy Apples", "Scoot", "Second Chances", "semantexts", "SEMANTISCALE", "Sh*theads app", 
+    "SharperBarber", "SHAUP", "SHITSTORM MEDIA", "SIDE HUSTLE", "Sitterz", "Slopes", "Snakeit", "SoftWear", 
+    "SOURCEBRICKS", "soursashimi", "Sparkles", "Split", "Spotterz", "Spoucey", "Surf&Solar", "SVS", 
+    "SWEAT FACTORY H AF", "SweetSpots", "TechCards", "The Agency", "The Algorithm Project", "THE AS", 
+    "The Buddy", "THE EMERGENCY BACKPACK", "THE OLIVIA PROJECT", "TIME MACHINE", "tofushi", "TOLL'D", "TORQUE", 
+    "Toy Trader", "TRENDZ", "TRILLION TRACK", "TRUNKSHOW", "U.GOD", "UMAMI", "Vanilla", "Veeting", "VRSING", 
+    "Waterblades", "webappapp", "wetlabs", "Whatyallthink", "White Compass", "Wincy", "Wingman", "WWMD", "XPR"
+  ),
+  Industry = c(
+    "Telephone Utilities", "Other", "Education", "Computer Software", "Internet", "Health", "Business Services", 
+    "Computer Software", "Builders/Residential,Computer Software", "Internet", "Manufacturing, Misc", 
+    "Books, Magazines & Newspapers", "Misc Manufacturing & Distributing", "Computer Software", "Other, Computer Software", 
+    "Women's Issues", "Health", "Electronics Manufacturing & Equipment", "Retail Sales", "Clothing Manufacturing", 
+    "Education", "Religious Organizations/Clergy,Computer Software", "Savings & Loans", "Trucking", "Other", "Other", 
+    "Building Trade Unions,Real Estate", "Other", "Other", "Transportation", "Other", "Electric Utilities", "Education", 
+    "Health,Health Services/HMOs,Doctors & Other Health Professionals", "Health,Health Professionals", "Transportation", 
+    "Unions, Misc", "Car Manufacturers", "Education,Universities/Colleges & Schools", "Other", "Air Transport", 
+    "Internet", "Food & Beverage, Health", "Foundations, Philanthropists & Non-Profits", "Other", "Banks, Commercial", 
+    "Internet", "Computer Software", "Internet", "Other", "Education", "TV / Movies / Music", "Food & Beverage", 
+    "Computer Software", "Computer Software, Advertising/Public Relations", "Computer Software", "Other", "Electric Utilities", 
+    "Entertainment Industry, Internet", "Restaurants & Drinking Establishments", "Health, Health Services/HMOs", "Health", 
+    "Computer Software", "Computer Software", "Internet", "Other", "Internet", "Alternative Energy Production & Services, Business Services,Power Utilities", 
+    "Internet", "Food Products Manufacturing", "Foundations, Philanthropists & Non-Profits", "Hedge Funds", "Health", 
+    "Building Trade Unions", "Computer Software, Democratic/Liberal, Conservative/Republican", "Internet", "Insurance", 
+    "Health", "Internet", "Other", "Waste Management", "Computer Software", "Health,Food Products Manufacturing", 
+    "Health,HMOs & Health Care Services,Drug Manufacturers", "Internet", "Food Processing&Sales, Food Products Manufacturing", 
+    "Food Products Manufacturing", "Business Services", "Retail Sales", "Business Associations", "Health", 
+    "Health, Computer Software", "Internet", "Entertainment Industry", "Computer Software,Internet", "Entertainment Industry", 
+    "Music Production", "Health", "Sport, Professional", "Processing", "Education,SecurIty & Investment", "Computer Software", 
+    "Computer Software", "Business Services", "Business Services", "Other", "Other", "Other", "Lodging / Tourism", 
+    "Internet", "Business Services", "Education", "Other, Computer Software", "Computer Software", "Computer Software", 
+    "Computer Software,Sports, Professional", "Education", "Electric Utilities", "Environment", "Electric Utilities", 
+    "TV / Movies / Music", "Environment", "Computer Software", "Other", "Other", "Other", "Health, Health Professionals", 
+    "Books, Magazines & Newspapers", "Other", "Real Estate", "Health", "Labor", "Other", "Waste Management", 
+    "Internet,Misc Business", "Securities & Investment", "Internet,Music Production,TV / Movies / Music", 
+    "Business Associations", "Entertainment Industry", "Health", "Transportation", "Women's Issues", "Computer Software", 
+    "Other", "Internet", "Other", "Other", "Publishing & Printing", "Other", "Computer Software", "Environment", 
+    "Computer Software", "Clothing Manufacturing", "Miscellaneous Services", "Food Products Manufacturing", "Other", 
+    "Business Services", "Computer Software", "Other", "Electronics Manufacturing & Equipment", "Other", "Education, Sports, Professional", 
+    "Internet", "Labor", "Business Services", "Publishing & Printing", "Health", "Electric Utilities,Energy & Natural Resources", 
+    "Internet", "Internet", "Entertainment Industry", "Food Products Manufacturing", "Transportation,Computer Software", 
+    "Internet,Car Dealers", "Internet", "Internet", "Music Production", "Other", "Health", "Business Services", "Other", 
+    "Computer Software", "Entertainment Industry", "Internet", "HMOs & Health Care Services", "Other, Computer Software", 
+    "Computer Software", "Gambling & Casinos", "Other", "Other", "Other", "Lodging / Tourism"
+  )
+)
+
+# Save to CSV
+#write.csv(startups_data, "startups_data.csv", row.names = FALSE)
+```
+
+```{r}
+library(readr)
+startups_data <- read_csv("/Users/chencheng/Desktop/求职/Forkaia实习/TASK 10/startups_data.csv")
+View(startups_data)
+```
+
+```{r}
+# Separate multiple industries within a row for accurate counting
+startups_data_separated <- startups_data %>%
+  separate_rows(Industry, sep = ",")
+
+# Count the number of startups by industry
+industry_counts <- startups_data_separated %>%
+  group_by(Industry) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+
+# Create a bar plot showing the number of startups by industry
+ggplot(industry_counts, aes(x = reorder(Industry, -count), y = count)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  theme_minimal() +
+  labs(title = "Startups by Industry", x = "Industry", y = "Number of Startups") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+```{r}
+# Count the number of startups by industry, filtering out any with zero count
+industry_counts <- startups_data_separated %>%
+  group_by(Industry) %>%
+  summarise(count = n()) %>%
+  filter(count > 0) %>%    # Ensure no zero or missing values
+  arrange(desc(count))
+
+# Set a threshold to remove industries with very few startups, e.g., less than 2
+industry_counts <- industry_counts %>%
+  filter(count >= 2)
+
+# Create the treemap
+ggplot(industry_counts, aes(area = count, fill = Industry, label = Industry)) +
+  geom_treemap() +
+  geom_treemap_text(colour = "white", place = "centre", grow = TRUE) +
+  theme_minimal() +
+  labs(title = "Startups by Industry")
+```
+
+```{r}
+# Separate multiple industries within a row for accurate counting
+startups_data_separated <- startups_data %>%
+  separate_rows(Industry, sep = ",") %>%
+  mutate(Industry = trimws(Industry))  # Remove leading/trailing spaces
+
+# Count the number of startups by industry
+industry_counts <- startups_data_separated %>%
+  group_by(Industry) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+
+# Extract all unique industry names from the plot
+unique_industry_names <- industry_counts$Industry
+
+# Print all unique industry names
+print(unique_industry_names)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
