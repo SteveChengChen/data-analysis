@@ -1,0 +1,146 @@
+---
+title: "stat 480 Final Project"
+author: "Cheng Chen"
+date: "2023-11-28"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+- Strategy Evaluation: "What are the most effective player strategies in blackjack, as evidenced by win rates, across different scenarios presented in the dataset?" This question allows for the analysis of different strategies (like when to hit or stand) and how they fare under various conditions (like different dealer cards).
+
+- Risk Analysis: "How does the risk of busting change with each additional card taken by players?" This involves examining the probability of busting as players decide to take more cards, helping to understand the risk-reward balance in the game.
+
+- Comparative Analysis of Player Decisions: "How do different players’ decision-making patterns affect their overall success in the game?" By comparing the decisions made by different players, you can identify which choices lead to higher win rates.
+
+- Loss Analysis: "What are the common factors leading to player losses - being beaten or busting?" This analysis can help in understanding the pitfalls players often fall into and how they can be avoided.
+
+- Predictive Modeling: "Can we predict the outcome of a blackjack hand based on initial conditions?" While this leans towards predictive analytics, it can be framed as a decision-support tool, suggesting probabilities of different outcomes based on the initial hand.
+
+
+```{r}
+blkjck <- read_csv("blkjckhands.csv")
+
+str(blkjck)
+```
+
+```{r}
+library(dplyr)
+library(readr)
+
+player1 <- blkjck %>% 
+  filter(PlayerNo == "Player1") %>%
+  select(card1, card2, card3, card4, card5, sumofcards, dealcard1, dealcard2, dealcard3, dealcard4, dealcard5, sumofdeal, blkjck, winloss, plybustbeat, dlbustbeat, plwinamt, dlwinamt, ply2cardsum)
+
+player2 <- blkjck %>% 
+  filter(PlayerNo == "Player2") %>%
+  select(card1, card2, card3, card4, card5, sumofcards, dealcard1, dealcard2, dealcard3, dealcard4, dealcard5, sumofdeal, blkjck, winloss, plybustbeat, dlbustbeat, plwinamt, dlwinamt, ply2cardsum)
+
+player3 <- blkjck %>% 
+  filter(PlayerNo == "Player3") %>%
+  select(card1, card2, card3, card4, card5, sumofcards, dealcard1, dealcard2, dealcard3, dealcard4, dealcard5, sumofdeal, blkjck, winloss, plybustbeat, dlbustbeat, plwinamt, dlwinamt, ply2cardsum)
+
+player4 <- blkjck %>% 
+  filter(PlayerNo == "Player4") %>%
+  select(card1, card2, card3, card4, card5, sumofcards, dealcard1, dealcard2, dealcard3, dealcard4, dealcard5, sumofdeal, blkjck, winloss, plybustbeat, dlbustbeat, plwinamt, dlwinamt, ply2cardsum)
+
+player5 <- blkjck %>% 
+  filter(PlayerNo == "Player5") %>%
+  select(card1, card2, card3, card4, card5, sumofcards, dealcard1, dealcard2, dealcard3, dealcard4, dealcard5, sumofdeal, blkjck, winloss, plybustbeat, dlbustbeat, plwinamt, dlwinamt, ply2cardsum)
+
+player6 <- blkjck %>% 
+  filter(PlayerNo == "Player6") %>%
+  select(card1, card2, card3, card4, card5, sumofcards, dealcard1, dealcard2, dealcard3, dealcard4, dealcard5, sumofdeal, blkjck, winloss, plybustbeat, dlbustbeat, plwinamt, dlwinamt, ply2cardsum)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
