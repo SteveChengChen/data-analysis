@@ -1,0 +1,207 @@
+### Assuming that I = 0.001, β = 200, µ = 0.02, and γ = 365/7:
+### Modify your model to be an SEIR with a latent period of 5 days (sigma = 365/5 per year).
+### You can assume E = 0 . How does the SEIR differ from the SIR model in terms of:
+###    a. timing of the first peak,
+###    b. proportion of susceptible after 1 year (35 points)
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(deSolve)
+library(tidyverse)
+```
+
+```{r}
+seirDem <- function(t, y, pars){
+  
+  S <- y[1]
+  E <- y[2]
+  I <- y[3]
+  R <- y[4]
+  
+  beta <- pars["beta"]
+  gamma <- pars["gamma"]
+  sigma <- pars["sigma"]
+  mu <- pars["mu"]
+  
+  dS <- mu -beta * S * I - mu * S
+  dE <- beta * S * I - sigma * E - mu * E
+  dI <- sigma * E - gamma * I - mu * I
+  dR <- gamma * I - mu * R
+  
+  
+  out_1 <- c(dS, dE, dI, dR)
+  list(out_1)
+}
+
+times <- seq(0, 1, by = 1/365)
+paras <- c(beta = 200, gamma = 365/7, mu = 0.02, sigma = 365/5)
+init <- c(S = 0.999, E = 0, I = 0.001, R = 0)
+
+data_out_1 <- ode(y = init, times = times, func = seirDem, parms = paras)
+data_out_1 <- as_tibble(data_out_1)
+
+head(data_out_1 %>% filter(I== max(I)) )
+
+head(data_out_1)
+tail(data_out_1)
+```
+```{r}
+plotSEIR <- data_out_1 %>% pivot_longer(cols = S:R, 
+                                      names_to = "Variable", values_to = "Proportion") %>%
+  mutate(timeD =time*365) %>%
+  ggplot(aes(x = timeD, y = Proportion, col = Variable)) + 
+  geom_line(size = 1) + theme_bw() + xlab("Time (days)")
+
+plotSEIR
+```
+
+
+
+##### a) The timing of the first peak is on day 48 with proportion of 0.2191621 in SEIR model, and that in a SIR model is on day 20 with proportion of 0.3890036. Comparing these two models, the first peak in SEIR model comes late with a lower proportion. This is because in SEIR model, susceptible people have a latent period before they are infectious. Therefore, the peak proportion of infectious period is separated with latent period. And in SIR model, the people becomes infectious immediately, so the peak comes early with a higher proportion.
+##### b) Using SIR model, we can get that the proportion of susceptible after a year is 0.04118060. However, in our SEIR model, the proportion of susceptible after a year is 0.03953947, which is smaller than that of SIR model. Since the proportion of exposed people may recover directly, the proportion of recovered people after a year is higher in SEIR model.
+
+
+### 2) What would happen if we coded a SI model instead? Add a plot and a short paragraph describing the outcome.
+
+```{r}
+siDem <- function(t, y, pars){
+  
+  S <- y[1]
+  I <- y[2]
+  
+  beta <- pars["beta"]
+  mu <- pars["mu"]
+  
+  dS <- mu -beta * S * I - mu*S
+  dI <- beta * S * I - mu*I
+  
+  out <- c(dS, dI)
+  list(out)
+}
+
+times <- seq(0, 1, by = 1/365)
+paras <- c(beta = 200, mu = 0.02)
+init <- c(S = 0.999, I = 0.001)
+
+data_out_2 <- ode(y = init, times = times, func = siDem, parms = paras)
+data_out_2 <- as_tibble(data_out_2)
+
+head(data_out_2 %>% filter(I == max(I)) )
+
+head(data_out_2)
+tail(data_out_2)
+```
+```{r}
+plotSI <- data_out_2 %>% pivot_longer(cols = S:I, 
+                                      names_to = "Variable", values_to = "Proportion") %>%
+  mutate(timeD =time*365) %>%
+  ggplot(aes(x = timeD, y = Proportion, col = Variable)) + 
+  geom_line(size = 1) + theme_bw() + xlab("Time (days)")
+
+plotSI
+```
+
+##### In the SI model plot above, we can see that the infection happened quickly in the first 25 days, then it reaches its highest point on day 88, both with proportion close to 1. Because they are close to equillibrium.
+
+
+### 3) What about a SIRS model with waning immunity after a month? (omega = 365/30 per year).
+
+```{r}
+sirsDem <- function(t, y, pars){
+  
+  S <- y[1]
+  I <- y[2]
+  R <- y[3]
+  
+  beta <- pars["beta"]
+  gamma <- pars["gamma"]
+  omega <- pars["omega"]
+  
+  dS <- -beta * S * I + omega * R
+  dI <- beta * S * I - gamma * I
+  dR <- gamma * I - omega * R
+  
+  
+  out <- c(dS, dI, dR)
+  list(out)
+}
+
+times <- seq(0, 1/12, by = 1/365)
+paras <- c(beta = 200, gamma = 365/7, omega = 365/30)
+init <- c(S = 0.999, I = 0.001, R = 0)
+
+data_out_3 <- ode(y = init, times = times, func = sirsDem, parms = paras)
+data_out_3 <- as_tibble(data_out_3)
+
+head(data_out_3 %>% filter(I== max(I)) )
+
+head(data_out_3)
+tail(data_out_3)
+```
+
+```{r}
+plotSIRS <- data_out_3 %>% pivot_longer(cols = S:R, 
+                                      names_to = "Variable", values_to = "Proportion") %>%
+  mutate(timeD =time*365) %>%
+  ggplot(aes(x = timeD, y = Proportion, col = Variable)) + 
+  geom_line(size = 1) + theme_bw() + xlab("Time (days)")
+
+plotSIRS
+```
+
+
+##### As we can see in the plot above,in SIRS model for the first month, the first peak happened on day 20, when the proportion of susceptible is 0.2772154. 
+
+
+
+
+### 3)Run it for several years. What happens after several years? How does this model differ fromthe SIR model? Add a plot and a short paragraph describing the outcome
+
+```{r}
+sirsDem <- function(t, y, pars){
+  
+  S <- y[1]
+  I <- y[2]
+  R <- y[3]
+  
+  beta <- pars["beta"]
+  gamma <- pars["gamma"]
+  omega <- pars["omega"]
+  
+  dS <- -beta * S * I + omega * R
+  dI <- beta * S * I - gamma * I
+  dR <- gamma * I - omega * R
+  
+  
+  out <- c(dS, dI, dR)
+  list(out)
+}
+
+times <- seq(0, 3, by = 1/365)
+paras <- c(beta = 200, gamma = 365/7, omega = 365/30)
+init <- c(S = 0.999, I = 0.001, R = 0)
+
+data_out_3 <- ode(y = init, times = times, func = sirsDem, parms = paras)
+data_out_3 <- as_tibble(data_out_3)
+
+head(data_out_3)
+tail(data_out_3)
+```
+
+```{r}
+plotSIRS <- data_out_3 %>% pivot_longer(cols = S:R, 
+                                      names_to = "Variable", values_to = "Proportion") %>%
+  mutate(timeD =time*365) %>%
+  ggplot(aes(x = timeD, y = Proportion, col = Variable)) + 
+  geom_line(size = 1) + theme_bw() + xlab("Time (days)")
+
+plotSIRS
+```
+
+
+
+
+##### From the plot above, we can see that after 3 years, the proportions of susceptible, infected and recovered people become stable at 0.25, 0.125 and 0.6 respectively. Unlike SIR model, the SIRS model shows two peaks, the proportion of infected people grows again slightly after its first peak. And the final proportion of infected people is not close to 0.
+
+
+
+
