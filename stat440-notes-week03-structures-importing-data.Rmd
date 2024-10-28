@@ -1,0 +1,347 @@
+---
+title: "STAT 440 Statistical Data Management"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Notes
+### Created by Christopher Kinson
+
+
+***
+
+### Table of Contents
+
+- [Do you think about data?](#do-you-think-about-data)  
+- [Structures of data, delimiters, and file extensions](#structures-of-data-delimiters-and-file-extensions)  
+  - [Structured data](#structured-data)  
+  - [Semi-structured data](#semi-structured-data)  
+  - [Unstructured data](#unstructured-data)  
+- [Accessing and importing data](#accessing-and-importing-data)  
+  - [Tab-separated structured data](#tab-separated-structured-data)  
+  - [Comma-separated structured data](#comma-separated-structured-data)  
+  - [JSON semi-structured data](#json-semi-structured-data)  
+  - [General structured data with RStudio Import Dataset wizard](#general-structured-data-with-rstudio-import-dataset-wizard)
+- [Exporting data](#exporting-data)
+- [Handling dates and times](#handling-dates-and-times)  
+
+
+***
+
+
+## <a name="do-you-think-about-data"></a>Do you think about data?
+
+Do you think about data?
+
+One very important and omnipresent idea for this course is to think about data. Think about how it came to be, the ways in which it can exist (or be), what was or is its plan, what do we want to do with it, and how we envision or plan for it to be used later. Data is information at its most simplest definition. This information or data can be collected and stored in various ways. Data can be a table of values, a book, a picture, a tweet, a time stamp, a tool, and so many other things.
+
+Data sets, as we often imagine, are organized tabular forms of information with fields or columns and observations or rows. Here's a screenshot of the Rental Inspection Grades Listing Data:
+
+![](https://uofi.box.com/shared/static/210adqxlutkvkmkoklzi6mla6qfj77vs.png)
+
+Did you consider that the image itself is also a data set? It contains information about its size, contents, date created, date modified, file type, and other information.
+
+What are some uncommon or not so obvious data sets that you have seen, noticed, or worked with?
+
+Below I discuss other forms and structures of data we may need to deal with.
+
+
+***
+
+
+## <a name="structures-of-data-delimiters-and-file-extensions"></a>Structures of data, delimiters, and file extensions  
+
+One of the first things we do as data engineers is to see, touch, and feel a dataset. Accessing and importing involves knowing a little bit about the data beforehand such as how the data is structured and organized, the number of records and fields, where the records begin, and the presence of delimiters. Data may be organized and delimited, and it might be helpful to check that the data we imported honors that organization. One way to do that is to check the descriptor portion of the data (e.g. the structure of the data with `str()` - showing the first few observations and object types of each column). The descriptor portion might also be known as the data contents, data structure, or data summary.
+
+### <a name="structured-data"></a>Structured data
+
+Structured data sets are simply files with records (as rows) and fields (as columns). We may interchange the word "records" with "observations" or "subjects", while we may interchange "fields" with "variables." The fields are often organized in a particular way either with delimiters or a specific width. Most data sets that you deal with in the STAT major are structured data.
+
+Delimiters are specific characters used to separate fields of information such as commas, colons, spaces, tabs, and even pipes. In Europe, semi-colon is a typical delimiter.
+
+When information is set to a specific or fixed width, fields can essentially be counted by the eye and are not required to be fixed for all columns; only that each column has its own fixed width.
+
+These structured data sets are usually saved (or named) with a file extension, and the file extension serves as a clue for the way the file is delimited or organized. **However, a file name can have no extensions or even multiple extensions such as .nb.html and .tar.gz.**
+
+Below is a table of common file formats, delimiters, and extensions. What's represented here are not strict rules.
+
+Format | Delimiter | Extension
+---|---|---
+comma-separated | \, | .csv
+tab-delimited or tab-separated | \\t | .txt or .tsv
+fixed-width | field width | .dat or .txt
+delimited or delimiter-separated | \| or \: or \; | .txt or .csv or .dat
+
+In addition to the descriptor portion, we might just want to see the raw data by printing it out. Checking both the printout and the descriptor portion can provide a quick verification that the data is imported successfully (assuming no processing or syntax errors have been detected).
+
+Below are links to the Rental Inspection Grades Listing Data in various formats, delimiters, and extensions.
+
+- [Rental Inspection Grades Listing Data as comma-separated .csv](https://uofi.box.com/shared/static/y5rysysc7ycpe6nedwfzai58wkmqbtkw.csv)
+
+- [Rental Inspection Grades Listing Data as comma-separated .txt](https://uofi.box.com/shared/static/tgu3zibhk81ky7fy43ikgvez8nihvl4c.txt)  
+
+- [Rental Inspection Grades Listing Data as tab-separated .txt](https://uofi.box.com/shared/static/vbyr3mry73je0phluh15y1f93am465j5.txt)  
+
+- [Rental Inspection Grades Listing Data as tab-separated .csv](https://uofi.box.com/shared/static/64tk0kf31gfwp1pmfre3ca9obajn28h1.csv)  
+
+Do you notice any pattern to the structure within the files linked above? In order to observe any patterns, you have to open the raw data files via the links above. 
+
+### <a name="semi-structured-data"></a>Semi-structured data
+
+Semi-structured data may be files that are organized with tags or attributes but the information is in human-readable text; giving rise to its "semi-structured" name. Some common examples of semi-structured data are stored in JSON, GeoJSON, xml, and xlsx. These file formats are quite popular for web development and often created for communicating between the web and applications. Due to the semi-structure, accessing and importing these files may require special packages and tools inside beyond base R.
+
+Below is a link to the Rental Inspection Grades Listing Data as a .JSON.
+- [Rental Inspection Grades Listing Data as .JSON](https://uofi.box.com/shared/static/n7u384tfmudtmn0khncoozjl64s2ewtj.json)
+
+Do you notice any pattern to the semi-structure within the the file linked above?
+
+### <a name="unstructured-data"></a>Unstructured data
+
+In text - when we think of documents, papers, journals, books - we think of the writing as structured with an introduction, supporting paragraph, conclusion, summary. Also, we think of the writing in text as being well-organized with a logical flow of ideas, correct punctuation, and limited spelling and grammatical errors. These are true of well-written text in paper or digital copy. But imagine this book or article existing as a dataset. How would you organize it? Would there be records and fields? What would the main information consist of? Any delimiters?
+
+These questions are not easy to answer and are equally difficult for a computer to figure out. Yet, text is so readily available for analysis that new approaches in text mining and natural language processing are ripe for the taking.
+
+Unstructured data is the human readable text that has been stored in a file such as .txt or .pdf. 
+
+Typically, we can create a structure that is more friendly and organized for computers to handle. But how we do that does not follow widely accepted rules. For example, we could set the records (i.e. rows) as the different texts or documents (speeches, emails, tweets, articles) in plain text format. If there are any fields (i.e. columns) included in the text, then they may be the document source, author, ID of the document, published date, etc. The result of such a file might now be considered structured. Another example of adding structure to text is a term-document matrix, where each row is a new unique term and each column is a new document. Ultimately, structuring an unstructured dataset depends on the kind of data analysis.
+
+Consider the "mappable address" column of the Rental Inspection Grades Listing Data as unstructured data. How might we create structure of this column?
+
+
+***
+
+
+## <a name="accessing-and-importing-data"></a>Accessing and importing data
+
+The bulk of datasets we encounter as data workers is external from our software or programming language. External data can be imported so long as we know the location and have public access to that location.
+
+***Make sure your version of R is up-to-date!***
+
+There are several ways to access and import external data but we'll focus on three: `read_delim()` and `read_csv()` using the **tidyverse** package and `fromJSON()` using the **jsonlite** package. The advantages of **readr**'s importing (e.g. `read_csv()`) over R's base importing (e.g. `read.csv()`) are: much faster importing, much larger datasets for importing, and more simplified objects, i.e. tibbles.
+
+### <a name="tab-separated-structured-data"></a>Tab-separated structured data 
+
+The `read_delim()` is only one function for importing data with tabs as delimiters. We usually need to supply the file location and the separator. 
+
+Let's read in the [Rental Inspection Grades Listing Data as tab-separated .txt](https://uofi.box.com/shared/static/vbyr3mry73je0phluh15y1f93am465j5.txt)
+
+```{r import01}
+library(tidyverse)
+urbanaRentalsTAB <- read_delim("https://uofi.box.com/shared/static/vbyr3mry73je0phluh15y1f93am465j5.txt", delim="\t")
+str(urbanaRentalsTAB)
+```
+
+### <a name="comma-separated-structured-data"></a>Comma-separated structured data
+
+The `read_csv()` function is only one function for importing data with commas as delimiters. It has the same functionality as `read_delim` but assumes the default delimiter is comma. Typically, we only need to supply the file location. 
+
+Let's read in the [Rental Inspection Grades Listing Data as comma-separated .csv](https://uofi.box.com/shared/static/y5rysysc7ycpe6nedwfzai58wkmqbtkw.csv)
+
+```{r import02}
+urbanaRentalsCSV <- readr::read_csv("https://uofi.box.com/shared/static/y5rysysc7ycpe6nedwfzai58wkmqbtkw.csv")
+str(urbanaRentalsCSV)
+```
+
+### <a name="json-semi-structured-data"></a>JSON semi-structured data
+
+The `fromJSON()` is only one function for importing JSON data. Typically, we only need to supply the file location. But sometimes, the resulting data is not exactly the data frame that we want.
+
+Using `fromJSON()` on the [Rental Inspection Grades Listing Data as .JSON](https://uofi.box.com/shared/static/n7u384tfmudtmn0khncoozjl64s2ewtj.json) returns 
+
+```{r import03}
+library(jsonlite)
+urbanaRentalsJSON <- fromJSON("https://uofi.box.com/shared/static/n7u384tfmudtmn0khncoozjl64s2ewtj.json")
+str(urbanaRentalsJSON)
+```
+
+### <a name="general-structured-data-with-rstudio-import-dataset-wizard"></a>General structured data with RStudio Import Dataset wizard
+
+One final aspect of importing data with `readr` is the idea of importing the data through RStudio's "Import Dataset" wizard (menus, not purely from code). Importing in this way allows us to control how each column should be formatted, how specific we need the parameters of importing to be, and the source of the data. In other words, we can use the wizard to do any specific coercion or formatting at the time of importing (handling dates and times, coercing character columns to numeric, etc.)
+
+Here's a procedure for using RStudio's "Import Dataset" wizard:
+
+- Go to File > Import Dataset > From Text (readr).
+
+![](https://uofi.box.com/shared/static/00yyahyqwdfz21zbxe3xrhu5geddstut.png)
+
+- Paste the data file location in the File/URL box.
+
+![](https://uofi.box.com/shared/static/hsg3yjf5w1iltthpd0grbyz7hhxsrjww.png)
+
+- Look at your Data Preview and click on any columns that need re-formatting.
+
+- Once satisfied with the Data Preview, copy the code in the Code Editor box and paste it into your code chunk.
+
+
+***
+
+
+## <a name="exporting-data"><a/>Exporting data
+
+Since the bulk of datasets we encounter as data workers is external, let's discuss how to create external datasets using programming language. 
+
+***Again, make sure your version of R is up-to-date!***
+
+There are several ways to export data in various formats and delimiters, but we'll focus on three: `write_delim()` and `write_csv()` using the **tidyverse** package and `write_json()` using the **jsonlite** package. 
+
+For any of the export functions, we need to supply at least two arguments: i) the object to be exported and ii) the local file location including its new name and file extension. Certain functions may require more arguments. Let look at the examples below.
+
+We'll export the Rental Inspection Grades Listing Data as a JSON semi-structured object to the Desktop location. Your location can be different if you choose so.
+```{r}
+# 加了一段不然error，不知道为什么
+if(!dir.exists("C:/Users/chencheng/Desktop")) {
+  dir.create("C:/Users/chencheng/Desktop", recursive = TRUE)
+}
+```
+
+
+```{r export01}
+write_json(urbanaRentalsJSON, "C:/Users/chencheng/Desktop/urbana-rentals.json")
+```
+
+We'll export the Rental Inspection Grades Listing Data as a comma-delimited structured object to the Desktop location.
+
+```{r export02}
+write_csv(urbanaRentalsCSV, "C:/Users/chencheng/Desktop/urbana-rentals.csv")
+```
+
+We'll export the Rental Inspection Grades Listing Data as a tab-delimited structured object to the Desktop location.
+
+```{r export03}
+write_delim(urbanaRentalsTAB, "C:/Users/chencheng/Desktop/urbana-rentals.txt", delim="\t")
+```
+
+**Remember that the file extension does not necessarily determine how the file is structured or delimited.**
+
+
+***
+
+
+## <a name="handling-dates-and-times"></a>Handling dates and times
+
+When a data set contains date and time information in the fields (columns), the dates and times may be correctly imported internally by the programming language, but misinterpreted externally by the users. Most programming languages, operating systems, and software internally store dates and times as a value in reference to some specific date. For example, in SAS, the reference date is January 1, 1960. In R and Python, internal dates and times are in reference to January 1, 1970. You may find it necessary to convert character strings into date values or re-format existing date values. 
+
+Below is a table of standard date and time formats that work across Python and R. For more information about your programming language's specific formatting for dates, see [R with the tiyverse](https://r4ds.had.co.nz/dates-and-times.html) and [R with base R functionality](https://www.statmethods.net/input/dates.html). 
+
+Code | Meaning
+---|---
+\%a	| Abbreviated weekday name	
+\%A	| Full weekday name
+\%b	| Abbreviated month name	
+\%B	| Full month name
+\%c	| Date and time	
+\%d	| Day of the month (0-31)
+\%H	| Hours (24 hour)	
+\%I	| Hours (12 hour)
+\%j	| Day of the year numbered (000-366)
+\%m	| Month numbered (01-12)
+\%M	| Minute numbered (00-59)	
+\%p	| AM/PM
+\%S	| Second numbered (00-61)	
+\%U	| Week of the year starting on Sunday numbered (00-53)
+\%w	| Weekday starting on Sunday numbered (0-6)	
+\%W	| Week of the year starting on Monday numbered (00-53)
+\%y	| 2-digit year	
+\%Y	| 4-digit year
+\%z	| Offset from UTC	
+\%Z	| Time zone (character)
+
+Let's see this in action with the City of Urbana's [Rental Inspection Grades Listings Data - structured comma-separated file](https://uofi.box.com/shared/static/y5rysysc7ycpe6nedwfzai58wkmqbtkw.csv). Let's focus on the Inspection Date and Expiration Date columns.
+
+```{r datestimes01}
+colnames(urbanaRentalsCSV)
+
+rental_dates <- urbanaRentalsCSV[,c(3,6)]
+
+str(rental_dates)
+
+typeof(rental_dates$`Inspection Date`)
+typeof(rental_dates$`Expiration Date`)
+```
+
+The two date columns are stored in R as character format or type (aka mode). What we want is for the date columns to be stored in R as date format which is a numeric type or mode. Because the `rental_dates` object exists in our environment with character format, we are going to **coerce** the character format to be date format.
+
+There's a few ways to handle date coercion in R: tidyverse's **lubridate** package, and base R's `as.Date()`. To handle coercion of character to both date and time (e.g. datetime) format, then we can use base R's `as.POSIXct()` function.
+
+Coercing character to date format using the **lubridate** package requires us to know how the character string of the date currently looks.
+
+```{r datestimes02}
+head(rental_dates)
+```
+
+Each column looks like a two-digit month, forward slash, two-digit day, forward slash, and four-digit year. Thus this is a month, day, year order, which means we can use the `mdy()` function. If it were another type, e.g., year, month day order then we could use `ymd()`. See the `?mdy` help page for more details including other **lubridate** date parsing functions.
+
+```{r datestimes03}
+rental_dates$InspectionDate2<-lubridate::mdy(rental_dates$`Inspection Date`)
+
+rental_dates$ExpirationDate2<-lubridate::mdy(rental_dates$`Expiration Date`)
+
+mode(rental_dates$InspectionDate2)
+mode(rental_dates$ExpirationDate2)
+
+typeof(rental_dates$InspectionDate2)
+typeof(rental_dates$ExpirationDate2)
+
+str(rental_dates)
+```
+
+The result shows that this is indeed a Date format and a numeric mode or type.
+
+If we were using base R to accomplish the same kind of coercion, we might use `as.Date()` in base R and the table of standard date formats above, paying attention to the literal order: two-digit month, forward slash, two-digit day, forward slash, and four-digit year.
+
+```{r datestimes04}
+rental_dates$InspectionDate3<-as.Date(rental_dates$`Inspection Date`, format = "%m/%d/%Y")
+
+rental_dates$ExpirationDate3<-as.Date(rental_dates$`Expiration Date`, format = "%m/%d/%Y")
+
+mode(rental_dates$InspectionDate3)
+mode(rental_dates$ExpirationDate3)
+
+typeof(rental_dates$InspectionDate3)
+typeof(rental_dates$ExpirationDate3)
+
+str(rental_dates)
+```
+
+For time values, we can use the tidyverse's **lubridate** package and its `hms()` function for hours, minute, seconds. The package also contains functions `hm()` and `ms()` for hours, minutes and minutes, seconds respectively. But these functions yield a format of Period, which is not ideal for handling differences in times (we may want to do that in the future). In base R, we can use the `as.POSIXct()` function to get the date and time. Alternatively, we should recall that RStudio has a GUI for importing data, and in that GUI, we can format columns to suit our needs. After previewing the columns, we can just copy the R code for that data import.
+
+```{r datestimes05}
+time_vec <- c("10:50", "12:30 PM", "22:10")
+lubridate::hm(time_vec)
+str(lubridate::hm(time_vec))
+mode(lubridate::hm(time_vec))
+
+as.POSIXct(time_vec, format="%H:%M")
+str(as.POSIXct(time_vec, format="%H:%M"))
+mode(as.POSIXct(time_vec, format="%H:%M"))
+```
+
+There are other things we can do with dates and times such as only show the years of a date column or on the time of a datetime column.
+
+```{r datestimes06}
+head(format(rental_dates$InspectionDate3, "%Y"))
+str(format(rental_dates$InspectionDate3, "%Y"))
+mode(format(rental_dates$InspectionDate3, "%Y"))
+
+head(lubridate::year(rental_dates$InspectionDate2))
+str(lubridate::year(rental_dates$InspectionDate2))
+mode(lubridate::year(rental_dates$InspectionDate2))
+
+format(as.POSIXct(time_vec, format="%H:%M"), "%H:%M")
+```
+
+But pay attention to how the results are not the same mode for base R functionality vs tidyverse functionality.
+
+Alternatively, we can use the RStudio Import Dataset wizard for properly formatting the times and dates columns of a dataset.
+
+![](https://uofi.box.com/shared/static/40b0x58eqg0k7skb9c4js3wvjqrd0z0h.png)
+
+How do we make a character format into a numeric one?
+
+
+#### END OF NOTES
