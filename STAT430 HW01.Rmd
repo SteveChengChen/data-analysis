@@ -1,3 +1,8 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
 ### Assuming that I = 0.001, β = 200, µ = 0.02, and γ = 365/7:
 ### Modify your model to be an SEIR with a latent period of 5 days (sigma = 365/5 per year).
 ### You can assume E = 0 . How does the SEIR differ from the SIR model in terms of:
