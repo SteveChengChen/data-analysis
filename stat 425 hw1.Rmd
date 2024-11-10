@@ -1,0 +1,179 @@
+---
+title: "stat 425 hw1"
+author: "Cheng Chen"
+date: "2023-06-23"
+output: html_document
+---
+```{r}
+library(ggplot2)
+```
+
+Problem 1
+a)
+```{r}
+library(faraway)
+data(prostate)
+summary(prostate)
+```
+```{r}
+#the summary shows the minimum, first quartile, median, mean, third quartile, maximum of all the data. Data in svi is special. svi is composed by only 0 and 1, and the number of 0 is larger than that of 1.
+```
+
+
+
+b)
+```{r}
+prostate$gleason <- as.factor(prostate$gleason)
+prostate$svi <- as.factor(prostate$svi)
+summary(prostate)
+```
+```{r}
+#dataset svi and gleason are composed of discrete variables. When we convert them into categorial variables, we can calculate the percentage each category have in the dataset. In svi, we have 76 zeros and 21 ones. And in gleason, most numbers are 6 and 7.
+```
+
+
+
+
+c)
+```{r}
+hist(prostate$lcavol)
+hist(prostate$lweight)
+hist(prostate$age)
+hist(prostate$lbph)
+hist(prostate$lcp)
+hist(prostate$pgg45)
+hist(prostate$lpsa)
+```
+
+```{r}
+#According to the histogram above, only the dataset of Icavol and Ipsa looks normally distributed, the others are either left skewed or right skewed.
+```
+
+
+
+d)
+```{r}
+boxplot(lpsa ~ svi, data = prostate, main = "lpsa by svi", xlab = "svi", ylab = "lpsa")
+```
+```{r}
+# The graph above shows the distribution of Ipsa for each level of svi. We can tell that most part of Ipsa is distributed between 0-4.
+```
+
+
+
+e)
+```{r}
+plot(prostate$lcavol, prostate$lpsa, main = "lpsa by lcavol", xlab = "lcavol", ylab = "lpsa")
+```
+
+
+```{r}
+model <- lm(lpsa ~ lcavol, data = prostate)
+plot(model$residuals, main = "Residuals of the model", xlab = "Index", ylab = "Residual")
+```
+
+```{r}
+ggplot(prostate, aes(x = lcavol, y = lpsa)) +
+  geom_point() +
+  geom_smooth(method = lm, se = FALSE, color = "red") +
+  theme_minimal() +
+  labs(title = "Scatterplot of lpsa against lcavol", x = "lcavol", y = "lpsa")
+
+```
+
+```{r}
+# As we can see from the graphs above, the scatterplot of Ipsa against Icavol shows that the variables are randomly scattered around the line. So a linear model is reasonable for these variable.
+```
+
+
+Problem2
+a)
+```{r}
+model_1 <- lm(prostate$lpsa ~ prostate$lcavol)
+summary(model_1)
+```
+regression coefficient id 0.71932, and the intercept is 1.50730
+
+
+b)
+Residual standard error is 0.7875, and the Multiple R-squared is 0.5394.
+53.94% of variation in Ipsa is explained by Icavol.
+
+c)
+```{r}
+residuals <- resid(model)
+mean_res <- mean(residuals)
+median_res <- median(residuals)
+mean_res
+median_res
+```
+
+
+d)
+```{r}
+fitted_vals <- fitted(model)
+correlation <- cor(residuals, fitted_vals)
+correlation
+```
+
+
+Problem5
+a)
+```{r}
+playbill <- read.csv("playbill.csv")
+```
+
+```{r}
+model <- lm(CurrentWeek ~ LastWeek, data = playbill)
+confint(model, level = 0.95)
+```
+1 is a plausible value for beta1, because 95% confidence interval contains 1.
+
+c)
+```{r}
+Last_week <- 400000
+current_week <- predict(model, newdata = data.frame(LastWeek = Last_week))
+current_week
+```
+```{r}
+pred_int <- predict(model, newdata = data.frame(LastWeek = Last_week), interval = "prediction")
+pred_int
+```
+450000 is not a feasible value because it is not in the 95%b interval.
+
+d)
+If a play's gross box office results are always stable, the rule might be an appropriate way.
+
+```{r}
+install.packages(ellipse)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
