@@ -1,0 +1,144 @@
+---
+title: "stat 425 hw2"
+author: "Cheng Chen"
+date: "2023-07-07"
+output: html_document
+---
+
+Problem 1
+```{r}
+library(faraway)
+data(sat)
+model1 <- lm(total ~ expend + ratio + salary, data = sat)
+```
+
+(a)
+```{r}
+summary(model1)$coefficients
+```
+p-value of "salary" is 6.666771e-02 > 0.05, we do not reject H0: βsalary = 0
+
+
+(b)
+```{r}
+anova(model1)
+```
+reject null hypothesis, because p-value of "expend" is less than 0.05
+"ratio" has an effect onmthe response
+
+
+(c)
+```{r}
+model2 <- lm(total ~ expend + ratio + salary + takers, data = sat)
+summary(model2)$coefficients
+anova(model1, model2)
+```
+p-value is 2.607e-16 < 0.05, we reject null hypothesis
+the p-value from the t-test matches the p-value from the F-test in the ANOVA table
+so the F -test here is equivalent to the t-test
+
+
+Problem 2
+```{r}
+library(faraway)
+data(prostate)
+model1 <- lm(lpsa ~ ., data = prostate)
+```
+
+(a)
+```{r}
+confint(model1, "age", level = 0.90)
+confint(model1, "age", level = 0.95)
+```
+
+(b)
+```{r}
+reduced_model <- step(model1, direction = "backward", alpha = 0.05)
+```
+```{r}
+anova(reduced_model, model1)
+```
+p-value is 0.4421 > 0.05, original model is preferred over reduced model.
+
+
+(c)
+```{r}
+library(ellipse)
+```
+
+```{r}
+cov_matrix <- vcov(model1)
+cov_age_lbph <- cov_matrix[c("age", "lbph"), c("age", "lbph")]
+confidence_ellipse <- ellipse(cov_age_lbph, centre = coef(model1)[c("age", "lbph")], level = 0.95)
+plot(confidence_ellipse, type = "l", xlab = "age", ylab = "lbph")
+points(0, 0, pch = 19)
+```
+The confidence region includes the origin, so we do not reject the null hypothesis.
+
+
+(d)
+```{r}
+n <- nrow(prostate)
+t_obs <- summary(model1)$coef[4,3]
+n_perm <- 10000
+t_perm <- numeric(n_perm)
+for (i in 1:n_perm) {
+  age_perm <- sample(prostate$age, n, replace = FALSE)
+  data_perm <- prostate
+  data_perm$age <- age_perm
+  model_perm <- lm(lpsa ~ ., data = data_perm)
+  t_perm[i] <- summary(model_perm)$coef[4,3]
+}
+p_value <- sum(abs(t_perm) >= abs(t_obs))/n_perm
+p_value
+```
+
+
+Problem 3
+```{r}
+data(prostate)
+model <- lm(lpsa ~ ., data = prostate)
+```
+
+(a)
+```{r}
+new_patient <- data.frame(
+  lcavol = 1.44692, lweight = 3.62301, age = 65, lbph = 0.3001,
+  svi = 0, lcp = -0.79851, gleason = 7, pgg45 = 15
+)
+prediction1 <- predict(model, newdata = new_patient, interval = "confidence", level = 0.95)
+prediction1
+```
+
+(b)
+```{r}
+new_patient$age <- 20
+prediction2 <- predict(model, newdata = new_patient, interval = "confidence", level = 0.95)
+prediction2
+```
+
+(c)
+```{r}
+summary1 <- summary(model)
+significant_vars <- rownames(summary1$coefficients)[summary1$coefficients[,4] < 0.05]
+reduced_model <- lm(lpsa ~ ., data = prostate[, c(significant_vars, "lpsa")])
+new_patient <- new_patient[, significant_vars]
+prediction3 <- predict(reduced_model, new_patient, interval = "confidence", level = 0.95)
+print(prediction3)
+```
+The CI is narrower, the model with only the significant predictors provides a more precise prediction, so the reduced model is preferred.
+
+
+Problem 4
+```{r}
+library(car)
+```
+
+
+
+
+
+
+
+
+
