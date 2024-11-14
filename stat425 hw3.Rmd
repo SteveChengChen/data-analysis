@@ -1,0 +1,275 @@
+---
+title: "stat 425 hw3"
+author: "Cheng Chen"
+date: "2023-07-20"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+Problem 1
+(a)
+```{r}
+library(faraway)
+data("aatemp")
+```
+
+```{r}
+attach(aatemp)
+linear_model <- lm(temp ~ year, data = aatemp)
+summary(linear_model)
+```
+
+```{r}
+par(mfrow=c(2,2))
+plot(linear_model)
+```
+
+```{r}
+par(mfrow=c(1,1))
+plot(temp ~ year)
+abline(coefficients(linear_model))
+```
+<br>
+There's a significant a linear trend, as the data follows the line on Q-Q plot.
+<br>
+
+(b)
+```{r}
+plot(residuals(linear_model) ~ year, na.omit(aatemp), ylab="Residuals")
+abline(h=0)
+```
+
+```{r}
+n <- length(residuals(linear_model))
+plot(tail(residuals(linear_model),n-1) ~ head(residuals(linear_model),n-1), xlab=
+expression(hat(epsilon)[i]),ylab=expression(hat(epsilon)[i+1]))
+abline(h=0,v=0,col=grey(0.75))
+```
+<br>
+Based on the plot, there are long sequences of points above or below the line, which indicates positive serial correlation.
+<br>
+
+(c)
+```{r}
+round(summary(lm(temp ~ poly(year,10), data = aatemp))$coef, dig = 3)
+round(summary(lm(temp ~ poly(year,9), data = aatemp))$coef, dig = 3)
+round(summary(lm(temp ~ poly(year,8), data = aatemp))$coef, dig = 3)
+round(summary(lm(temp ~ poly(year,7), data = aatemp))$coef, dig = 3)
+round(summary(lm(temp ~ poly(year,6), data = aatemp))$coef, dig = 3)
+round(summary(lm(temp ~ poly(year,5), data = aatemp))$coef, dig = 3)
+round(summary(lm(temp ~ poly(year,4), data = aatemp))$coef, dig = 3)
+y5 = lm(temp ~ poly(year, 5), data = aatemp)
+plot(temp ~ year, data = aatemp)
+points(aatemp$year, fitted(y5), pch = 20)
+new_data <- data.frame('year' = c(2001))
+predict(y5, new_data)
+```
+<br>
+According to the results, when d=5, the process stops. The plot of fitted model is shown above. The predicted temperature in 2001 is 49.28503
+<br>
+
+(d)
+```{r}
+library(splines)
+library(ggplot2)
+```
+
+```{r}
+func1 = bs(aatemp$year, df=6, intercept = T)
+dim(func1)
+matplot(aatemp$year, func1, type = "l", col = 1)
+
+y5_1 = lm(temp ~ bs(aatemp$year, df = 6, intercept = T), data = aatemp)
+summary(y5_1)
+plot(aatemp$year, aatemp$temp)
+lines(spline(aatemp$year, predict(y5_1)))
+sum(resid(y5)^2)
+sum(resid(y5_1)^2)
+```
+Since RSS for this model is 211.29 < 213.75, it fits better.
+
+<br>
+
+Problem 2
+(a)
+```{r}
+library(magrittr)
+library(ggplot2)
+summary(infmort)
+```
+
+```{r}
+plot1 <- infmort %>%
+  ggplot(aes(x=income))+geom_histogram(bins=30)+
+  labs(y="frequency")
+
+plot2 <- infmort %>%
+  ggplot(aes(x=mortality))+geom_histogram(bins=30)+
+  labs(y="frequency")
+
+plot3 <- infmort %>%
+  ggplot(aes(x=oil))+geom_bar()
+
+plot4 <- infmort %>%
+  ggplot(aes(x=region))+geom_bar()
+
+Rmisc::multiplot(plot1, plot2, plot3, plot4, cols=2)
+plot(infmort)
+```
+
+
+(b)
+```{r}
+plot_mor <- lm(mortality ~ income + region + oil + income*region + region*oil + income*oil, data=infmort)
+summary(plot_mor)
+anova(plot_mor)
+```
+
+According to the results, the term between income and oil is significant at 0.1% level, and other predictors are also significant at 5% level.
+
+
+
+(c)
+```{r}
+par(mfrow=c(2,2))
+plot(plot_mor)
+```
+
+according to the plots, Afganistan, Libya and Saudi Arabia are outliers.
+
+```{r}
+hist(infmort$income, main = "distribution of income", xlab = "income")
+```
+
+
+
+
+```{r}
+infmort$log_income <- log(infmort$income)
+trans_model <- lm(mortality ~ region + oil + log_income + region*oil + region*log_income + oil*log_income, data = infmort)
+summary(trans_model)
+anova(trans_model)
+```
+
+
+(d)
+$\beta_0$(Intercept): This is the baseline mortality rate when all other variables are zero.
+
+regionEurope, regionAsia, regionAmericas: These coefficients represent the difference in mortality rate for each region compared to the reference region, assuming that all other variables are held constant.
+
+oilno_oil_exports: This coefficient indicates the difference in mortality rate for countries that don't export oil compared to countries that do, assuming all other variables are constant.
+
+log_income: This is the change in mortality rate for a one percent increase in income, assuming all other variables are constant.
+
+regionAsia:oilno_oil_exports: This is the additional change in mortality rate for Asian countries that do not export oil compared to the reference group, beyond the main effects of being Asian and not exporting oil.
+
+regionAmericas:oilno_oil_exports, regionEurope:log_income, regionAsia:log_income, regionAmericas:log_income: These are similar interaction terms.
+
+oilno_oil_exports:log_income: This term indicates how the relationship between income and mortality changes for countries that do not export oil compared to those that do.
+
+
+
+
+Problem 3
+```{r}
+func <- function(x) sin(2*pi*x^3)^3
+x <- seq(0,1,by=0.01)
+y <- func(x) + 0.1*rnorm(101)
+```
+
+(a)
+```{r}
+library(splines)
+knots <- seq(from = min(x), to = max(x), length.out = 12)
+p_knot <- lm(y ~ bs(x, knots=knots))
+matplot(x,cbind(y,p_knot$fit),type="pl",ylab="y",pch=20,lty=1,col=1)
+```
+
+
+(b)
+```{r}
+aic <- AIC(p_knot)
+aic
+```
+
+(c)
+```{r}
+adj_r2 <- summary(p_knot)$adj.r.squared
+adj_r2
+```
+
+
+(d)
+```{r}
+aic_values <- sapply(3:20, function(k) {
+  knots <- seq(from = min(x), to = max(x), length.out = k)
+  model <- lm(y ~ bs(x, knots = knots))
+  AIC(model)
+})
+
+plot(3:20, aic_values, type = "b")
+
+best_k <- which.min(aic_values)
+best_k + 2
+
+```
+
+knot 14 is the best
+
+
+(e)
+```{r}
+best_knots <- seq(from = min(x), to = max(x), length.out = best_k + 2)
+best_model <- lm(y ~ bs(x, knots = best_knots))
+matplot(x,cbind(y,best_model$fit),type="pl",ylab="y",pch=20,lty=1,col=1)
+
+```
+
+
+Problem 4
+```{r}
+library(pls)
+library(glmnet)
+data(gasoline,package="pls")
+```
+(a)
+```{r}
+library(pls)
+```
+
+```{r}
+pcr_model <- pcr(octane ~ NIR, scale = T, validation = "CV", data = gasoline)
+predict_pcr <- predict(pcr_model, ncomp = 10, newdata = gasoline)
+
+lasso_model <- plsr(octane ~ NIR, ncomp = 10, data = gasoline, penalty = "lasso")
+predict_lass <- predict(lasso_model, newdata = gasoline)
+
+ridge_model <- plsr(octane ~ NIR, ncomp = 10, data = gasoline, penalty = "ridge")
+predict_rid <- predict(ridge_model, newdata = gasoline)
+```
+
+
+(b)
+```{r}
+NIR = as.matrix(gasoline$NIR)
+mean <- apply(NIR, 2, mean)
+new_data <- as.data.frame(t(mean))
+
+pcr_mean <- predict(pcr_model, ncomp = 10, newdata = new_data)
+lasso_mean <- predict(lasso_model, ncomp = 10, newdata = new_data)
+ridge_mean <- predict(ridge_model, ncomp = 10, newdata = new_data)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
