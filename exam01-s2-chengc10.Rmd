@@ -1,0 +1,183 @@
+# STAT 440 Statistical Data Management
+
+## Midterm Exam 01
+
+### Only the .Rmd file must be submitted by the end of class. Any exam submitted after that time will not be accepted; resulting in 0 points earned.
+
+#### This exam file should be saved as exam01-s2-netid.Rmd in the exams directory in your individual student repo (on the main branch), where you replace "netid" with your netid.
+
+
+***
+
+**#1** 
+
+**Problem:** Determine whether the statement below is TRUE or FALSE, then create an R vector named **prob01** with the assigned logical value of TRUE or FALSE. For example, `prob01 <- TRUE`. This R code should be written in the code chunk of the **Answer** section below. This code chunk should be executable and able to be evaluated.
+
+- Statement: In the tidyverse, it is impossible to use the `slice()` function to filter rows of data based on position or index.
+
+**Answer:**
+
+```{r}
+prob01 <- FALSE
+```
+
+***
+
+**#2**
+
+**Problem:** Determine whether the statement below is TRUE or FALSE, then create an R vector named **prob02** with the assigned logical value of TRUE or FALSE. For example, `prob02 <- TRUE`. This R code should be written in the code chunk of the **Answer** section below. This code chunk should be executable and able to be evaluated.
+
+- Statement: To retrieve each subsequent piloted-practice assignments from the command line, the git command `git remote add` is required and necessary each and every time.
+
+**Answer:**
+
+```{r}
+prob02 <- FALSE
+```
+
+***
+
+**#3** 
+
+**Problem:** Choose one of the letters that represents the most correct choice. Then, create an R vector named **prob03** with the letter chosen in quotes. For example, `prob03 <- "e"`. This R code should be written in the code chunk of the **Answer** section below. This code chunk should be executable and able to be evaluated.
+
+- Question: Which of these is the correct date format string for the actual date value "October-2023-Wednesday11"?  
+  a. "%B-%Y-%d"
+
+  b. "%b-%y-%a%d"
+
+  c. "%b-%Y-%a%d"
+
+  d. "%b-%Y-%a"
+
+  e. none of these
+
+**Answer:**
+
+```{r}
+prob03 <- "e"
+```
+
+***
+
+**#4**
+
+**Problem:** Determine whether the statement below is TRUE or FALSE, then create an R vector named **prob04** with the assigned logical value of TRUE or FALSE. For example, `prob04 <- TRUE`. This R code should be written in the code chunk of the **Answer** section below. This code chunk should be executable and able to be evaluated.
+
+- Statement: Given two data frames `x` and `y`, the tidyverse's `inner_join()` function performs a merging of all rows in `x` or `y`.
+
+**Answer:**
+
+```{r}
+prob04 <- FALSE
+```
+
+***
+
+**#5** 
+
+**Problem:** Choose all of the letters that represent the most correct choices. Then, create an R vector named **prob05** with the letter(s) chosen in quotes. For example, `prob05 <- c("e","f")`. This R code should be written in the code chunk of the **Answer** section below. This code chunk should be executable and able to be evaluated.
+
+- Question: Which of the following packages exist(s) within the tidyverse collection of packages?  
+  a. dplyr
+
+  b. stringr
+
+  c. tibble
+
+  d. openxlsx
+
+**Answer:**
+
+```{r}
+prob05 <- c("a","b","c")
+```
+
+***
+
+**#6**
+
+**Problem:** Determine whether the statement below is TRUE or FALSE, then create an R vector named **prob06** with the assigned logical value of TRUE or FALSE. For example, `prob06 <- TRUE`. This R code should be written in the code chunk of the **Answer** section below. This code chunk should be executable and able to be evaluated.
+
+- Statement: If a data file is given no file extension, then the data file cannot be imported at all.
+
+**Answer:**
+
+```{r}
+prob06 <- FALSE
+```
+
+***
+
+**#7** 
+
+**Problem:** Choose all of the letters that represent the most correct choice(s). Then, create an R vector named **prob07** with the letter chosen in quotes. For example, `prob07 <- c("e","f")`. This R code should be written in the code chunk of the **Answer** section below. This code chunk should be executable and able to be evaluated.
+
+- Question: Which of the following is not a command or function directly involved in mutating data? SQL commands are in ALL CAPS.    
+  a. ORDER BY
+
+  b. SELECT
+
+  c. transmute
+
+  d. mutate
+
+**Answer:**
+
+```{r}
+prob07 <- c("c","d")
+```
+
+***
+
+**#8**
+
+**Problem:** Choose one of the letters that represents the most correct choice. Then, create an R vector named **prob08** with the letter chosen in quotes. For example, `prob08 <- "e"`. This R code should be written in the code chunk of the **Answer** section below. This code chunk should be executable and able to be evaluated.
+
+- Question: Which of these is best understood to represent a missing value?  
+  a. 0
+
+  b. 23456789
+
+  c. NA
+
+**Answer:**
+
+```{r}
+prob08 <- "c"
+```
+
+***
+
+**#9** 
+
+**Problem:** Write your answer to the prompt as a complete sentence (with at least five words and at least one period) using a character string R vector and your answer is named **prob09**. For example, `prob09 <- "The answer must be a complete sentence with at least one period and at least five words."`. This R code should be written in the code chunk of the **Answer** section below. This code chunk should be executable and able to be evaluated.
+
+- Prompt: Describe two specific strategies for validating data. 
+
+**Answer:**
+
+```{r}
+prob09 <- "The first one is counting frequencies and duplicates, the second one is computing summary statistics. "
+```
+
+***
+
+**#10**
+
+**Problem:** **Do not click on the link to download or open the following data URL. The structure of the data is described in the data description below.**
+
+**Problem:** Using R, import the 2013 Chicago Food Inspections Data using the URL https://uofi.box.com/shared/static/xx5h2htgr3y3f2qkd8718wr0olqj5wiq.csv and employ data wrangling methods to create a data frame or tibble or table that contains the appropriate data stored and named as **prob10** that answers the question below. The structure (`str()`) of the imported data (prior to data wrangling) should match the following data description.
+
+**Data Description for 2013 Chicago Food Inspections Data**: Each data (a comma delimited .csv file) contains 20948 observations and 18 columns. The observations are places that serve food including grocery stores, butchers, bakeries, restaurants, school cafeterias, gas stations, and delis throughout the city limits of Chicago. These establishments pass, fail, or have certain conditions associated with passing the inspection. Failing an inspection typically means that there are serious violations, critical violations, or both types. The original data source is the City of Chicago. 
+
+**Question:** Which low-Risk Restaurants have a serious Violation as their first Violation? The final resulting data frame or tibble or table should be stored and named **prob10** and contain all original columns in their original column organization. Any business with a Risk level of 3 is considered low-Risk. Any facility type containing the string "restaurant" is considered a Restaurant; capitalization or case does not matter. For each business, the set of Violations are separated by the pipe keystroke '|'. The first Violation is the first within the set of Violations for that business. A serious Violation is a Violation numbered 15 to 29. **If there are no low-Risk Restaurants with a serious Violation as their first Violation, then the result should contain 0 rows or no usable data frame would be produced at all.**
+
+**Answer:**
+
+```{r}
+library(tidyverse)
+library(readr)
+prob10 <- read_csv("https://uofi.box.com/shared/static/xx5h2htgr3y3f2qkd8718wr0olqj5wiq.csv")
+
+```
